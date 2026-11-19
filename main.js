@@ -1,14 +1,69 @@
 delete process.env.ELECTRON_RUN_AS_NODE;
 
-const { app, BrowserWindow, ipcMain, session } = require('electron');
+const { app, BrowserWindow, ipcMain, session, safeStorage } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
 const { ElectronBlocker } = require('@ghostery/adblocker-electron');
 const fetch = require('cross-fetch');
 
 let mainWindow = null;
 let blocker = null;
 const disabledShieldsHosts = new Set();
+
+function getCreditsFile() {
+  return path.join(app.getPath('userData'), 'credits.json');
+}
+
+function getApiKeysFile() {
+  return path.join(app.getPath('userData'), 'secure_keys.json');
+}
+const INTEGRITY_SALT = 'shaktiman_devxanxit_security_salt_2026';
+
+const VALID_VOUCHERS = new Set([
+  'DX-SHAKTI-TOPUP-100',
+  'DEVXANXIT-PRO-2026',
+  'SHAKTI-BOOST-500',
+  'DEVXANXIT-SUPERCHARGE',
+  'SHAKTIMAN-PREVIEW-2026'
+]);
+
+function calculateHash(balance, updated) {
+  return crypto.createHmac('sha256', INTEGRITY_SALT)
+    .update(`${balance}:${updated}`)
+    .digest('hex');
+}
+
+function loadCreditsStore() {
+  const filePath = getCreditsFile();
+  try {
+    if (fs.existsSync(filePath)) {
+      const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+      const expected = calculateHash(data.balance, data.updated);
+      if (data.hash === expected && typeof data.balance === 'number' && data.balance >= 0) {
+        if (!Array.isArray(data.redeemedTokens)) data.redeemedTokens = [];
+        return data;
+      }
+    }
+  } catch (e) {}
+
+  const initial = {
+    balance: 10,
+    updated: Date.now(),
+    redeemedTokens: []
+  };
+  initial.hash = calculateHash(initial.balance, initial.updated);
+  saveCreditsStore(initial);
+  return initial;
+}
+
+function saveCreditsStore(store) {
+  store.updated = Date.now();
+  store.hash = calculateHash(store.balance, store.updated);
+  try {
+    fs.writeFileSync(getCreditsFile(), JSON.stringify(store, null, 2), 'utf8');
+  } catch (e) {}
+}
 
 const TRACKING_DOMAINS = [
   'doubleclick.net',
@@ -109,9 +164,12 @@ function createWindow() {
     backgroundColor: '#090d16',
     icon: iconPath,
     webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false,
-      webviewTag: true
+      nodeIntegration: false,
+      contextIsolation: true,
+      webSecurity: true,
+      allowRunningInsecureContent: false,
+      webviewTag: true,
+      preload: path.join(__dirname, 'main-preload.js')
     }
   });
 
@@ -128,12 +186,121 @@ function createWindow() {
 }
 
 app.on('web-contents-created', (event, contents) => {
-  contents.setWindowOpenHandler((details) => {
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send('open-new-tab', details.url);
+  if (contents.getType() === 'webview') {
+    contents.on('will-navigate', (e, navigationUrl) => {
+      try {
+        const u = new URL(navigationUrl);
+        if (u.protocol !== 'http:' && u.protocol !== 'https:' && navigationUrl !== 'about:blank') {
+          e.preventDefault();
+        }
+      } catch (err) {
+        e.preventDefault();
+      }
+    });
+
+    contents.on('will-redirect', (e, navigationUrl) => {
+      try {
+        const u = new URL(navigationUrl);
+        if (u.protocol !== 'http:' && u.protocol !== 'https:' && navigationUrl !== 'about:blank') {
+          e.preventDefault();
+        }
+      } catch (err) {
+        e.preventDefault();
+      }
+    });
+
+    contents.setWindowOpenHandler((details) => {
+      try {
+        const u = new URL(details.url);
+        if ((u.protocol === 'http:' || u.protocol === 'https:') && mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('open-new-tab', details.url);
+        }
+      } catch (e) {}
+      return { action: 'deny' };
+    });
+  }
+});
+
+ipcMain.handle('get-credits', () => {
+  const store = loadCreditsStore();
+  return { balance: store.balance };
+});
+
+ipcMain.handle('consume-credit', () => {
+  const store = loadCreditsStore();
+  if (store.balance <= 0) {
+    return { success: false, balance: 0 };
+  }
+  store.balance -= 1;
+  saveCreditsStore(store);
+  return { success: true, balance: store.balance };
+});
+
+ipcMain.handle('redeem-code', (event, rawCode) => {
+  const cleanCode = (rawCode || '').trim().toUpperCase();
+  if (!cleanCode) {
+    return { success: false, message: 'Please enter a valid voucher or activation code.' };
+  }
+
+  const store = loadCreditsStore();
+  if (store.redeemedTokens.includes(cleanCode)) {
+    return { success: false, message: 'This voucher code has already been redeemed.' };
+  }
+
+  if (VALID_VOUCHERS.has(cleanCode)) {
+    store.balance += 100;
+    store.redeemedTokens.push(cleanCode);
+    saveCreditsStore(store);
+    return { success: true, balance: store.balance, message: 'Voucher verified! 100 energy credits added.' };
+  }
+
+  return { success: false, message: 'Invalid voucher code. Please check your activation pass.' };
+});
+
+ipcMain.handle('encrypt-api-key', async (event, { service, apiKey }) => {
+  try {
+    if (!apiKey) return { success: false, error: 'Empty key' };
+    const filePath = getApiKeysFile();
+    let keys = {};
+    if (fs.existsSync(filePath)) {
+      try { keys = JSON.parse(fs.readFileSync(filePath, 'utf8')); } catch (e) {}
     }
-    return { action: 'deny' };
-  });
+    if (safeStorage.isEncryptionAvailable()) {
+      const encrypted = safeStorage.encryptString(apiKey);
+      keys[service] = encrypted.toString('base64');
+    } else {
+      const cipher = crypto.createCipheriv('aes-256-cbc', crypto.scryptSync(INTEGRITY_SALT, 'salt', 32), Buffer.alloc(16, 0));
+      let enc = cipher.update(apiKey, 'utf8', 'base64');
+      enc += cipher.final('base64');
+      keys[service] = enc;
+    }
+    fs.writeFileSync(filePath, JSON.stringify(keys, null, 2), 'utf8');
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+});
+
+ipcMain.handle('decrypt-api-key', async (event, { service }) => {
+  try {
+    const filePath = getApiKeysFile();
+    if (!fs.existsSync(filePath)) return { success: true, apiKey: '' };
+    const keys = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+    const encVal = keys[service];
+    if (!encVal) return { success: true, apiKey: '' };
+    if (safeStorage.isEncryptionAvailable()) {
+      const buf = Buffer.from(encVal, 'base64');
+      const decrypted = safeStorage.decryptString(buf);
+      return { success: true, apiKey: decrypted };
+    } else {
+      const decipher = crypto.createDecipheriv('aes-256-cbc', crypto.scryptSync(INTEGRITY_SALT, 'salt', 32), Buffer.alloc(16, 0));
+      let dec = decipher.update(encVal, 'base64', 'utf8');
+      dec += decipher.final('utf8');
+      return { success: true, apiKey: dec };
+    }
+  } catch (err) {
+    return { success: false, error: err.message, apiKey: '' };
+  }
 });
 
 ipcMain.handle('get-preload-path', () => {

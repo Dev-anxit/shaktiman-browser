@@ -1,8 +1,7 @@
-const { ipcRenderer } = require('electron');
-const path = require('path');
+const api = window.shaktimanAPI || {};
 
-const PRELOAD_SCRIPT = path.join(__dirname, 'preload.js');
-
+let preloadPath = '';
+let currentCredits = 10;
 let tabs = [];
 let activeTabId = null;
 let tabIdCounter = 1;
@@ -106,13 +105,17 @@ const scratchpadSavedStatus = document.getElementById('scratchpadSavedStatus');
 let currentFontSize = 1.15;
 let currentTtsUtterance = null;
 
-function getCredits() {
-  const saved = localStorage.getItem('shaktiman_credits');
-  if (saved === null || isNaN(parseInt(saved, 10))) {
-    localStorage.setItem('shaktiman_credits', '10');
-    return 10;
-  }
-  return parseInt(saved, 10);
+async function initSecurityAndCredits() {
+  try {
+    if (api.getPreloadPath) {
+      preloadPath = await api.getPreloadPath();
+    }
+    if (api.getCredits) {
+      const res = await api.getCredits();
+      currentCredits = res.balance;
+      updateCreditUI(currentCredits);
+    }
+  } catch (err) {}
 }
 
 function updateCreditUI(credits) {
@@ -138,20 +141,21 @@ function updateCreditUI(credits) {
   }
 }
 
-function checkAndDeductCredit() {
+async function checkAndDeductCredit() {
   try {
-    let credits = getCredits();
-    if (credits <= 0) {
-      openPaywallModal();
-      return false;
+    if (api.consumeCredit) {
+      const res = await api.consumeCredit();
+      if (!res.success) {
+        openPaywallModal();
+        return false;
+      }
+      currentCredits = res.balance;
+      updateCreditUI(currentCredits);
+      return true;
     }
-    credits -= 1;
-    localStorage.setItem('shaktiman_credits', credits.toString());
-    updateCreditUI(credits);
-    return true;
-  } catch (err) {
-    return false;
-  }
+  } catch (err) {}
+  openPaywallModal();
+  return false;
 }
 
 function openPaywallModal() {
@@ -178,7 +182,7 @@ function handleBuyCredits() {
   window.open('https://your-payment-link.com/topup', '_blank');
 }
 
-function handleRedeemPass() {
+async function handleRedeemPass() {
   const code = passCodeInput ? passCodeInput.value.trim() : '';
   if (!code) {
     if (paywallCard) {
@@ -187,33 +191,35 @@ function handleRedeemPass() {
       paywallCard.classList.add('shake');
     }
     if (passFeedbackMsg) {
-      passFeedbackMsg.textContent = 'Please enter a verification pass code.';
+      passFeedbackMsg.textContent = 'Please enter a valid activation voucher or pass code.';
       passFeedbackMsg.className = 'pass-feedback-msg error';
     }
     return;
   }
 
-  const clean = code.toUpperCase();
-  if (clean === 'SHAKTI999' || code.toLowerCase() === 'gimme_credits' || clean === 'SHAKTIMAN100') {
-    localStorage.setItem('shaktiman_credits', '100');
-    updateCreditUI(100);
-    if (passFeedbackMsg) {
-      passFeedbackMsg.textContent = '⚡ Code Verified! 100 Credits Added!';
-      passFeedbackMsg.className = 'pass-feedback-msg success';
-    }
-    setTimeout(() => {
-      closePaywallModal();
-      showToast('⚡ Supercharged! 100 Shaktiman AI Credits Unlocked!');
-    }, 400);
-  } else {
-    if (paywallCard) {
-      paywallCard.classList.remove('shake');
-      void paywallCard.offsetWidth;
-      paywallCard.classList.add('shake');
-    }
-    if (passFeedbackMsg) {
-      passFeedbackMsg.textContent = '💥 Invalid pass code! Try SHAKTI999 or gimme_Credits';
-      passFeedbackMsg.className = 'pass-feedback-msg error';
+  if (api.redeemCode) {
+    const res = await api.redeemCode(code);
+    if (res.success) {
+      currentCredits = res.balance;
+      updateCreditUI(currentCredits);
+      if (passFeedbackMsg) {
+        passFeedbackMsg.textContent = '⚡ ' + res.message;
+        passFeedbackMsg.className = 'pass-feedback-msg success';
+      }
+      setTimeout(() => {
+        closePaywallModal();
+        showToast('⚡ ' + res.message);
+      }, 400);
+    } else {
+      if (paywallCard) {
+        paywallCard.classList.remove('shake');
+        void paywallCard.offsetWidth;
+        paywallCard.classList.add('shake');
+      }
+      if (passFeedbackMsg) {
+        passFeedbackMsg.textContent = '💥 ' + res.message;
+        passFeedbackMsg.className = 'pass-feedback-msg error';
+      }
     }
   }
 }
@@ -465,7 +471,7 @@ function parseInputUrl(input) {
   const trimmed = input.trim();
   if (!trimmed) return null;
 
-  if (trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('file://')) {
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
     return trimmed;
   }
 
@@ -530,8 +536,10 @@ function createTab(initialUrl = null) {
   webview.id = `wv-${tabId}`;
   webview.className = 'webview-element';
   webview.setAttribute('allowpopups', 'true');
-  webview.setAttribute('webpreferences', 'contextIsolation=false');
-  webview.setAttribute('preload', PRELOAD_SCRIPT);
+  webview.setAttribute('webpreferences', 'contextIsolation=true, nodeIntegration=false, webSecurity=true, allowRunningInsecureContent=false');
+  if (preloadPath) {
+    webview.setAttribute('preload', preloadPath);
+  }
 
   viewContainer.appendChild(webview);
 
@@ -606,11 +614,24 @@ function setupWebviewEvents(tab, webview) {
   });
 }
 
-ipcRenderer.on('open-new-tab', (event, url) => {
-  if (url) {
-    createTab(url);
-  }
-});
+if (api.on) {
+  api.on('open-new-tab', (url) => {
+    if (url) createTab(url);
+  });
+
+  api.on('tracker-blocked', (data) => {
+    const matchingTab = tabs.find(t => t.webContentsId === data.webContentsId) || tabs.find(t => t.id === activeTabId);
+    if (matchingTab) {
+      matchingTab.blockedTrackers.push(data.url);
+      if (matchingTab.id === activeTabId) {
+        trackerCountText.textContent = matchingTab.blockedTrackers.length;
+        if (shieldPopover && shieldPopover.classList.contains('active')) {
+          updateShieldPopover();
+        }
+      }
+    }
+  });
+}
 
 function updateNavState(tab) {
   if (tab.url && tab.url !== 'about:blank') {
@@ -819,7 +840,9 @@ function toggleSidebar() {
 fireBtn.addEventListener('click', async () => {
   burnOverlay.classList.add('active');
   try {
-    await ipcRenderer.invoke('clear-all-data');
+    if (api.clearAllData) {
+      await api.clearAllData();
+    }
     showToast('Session burned: Cookies, cache & storage wiped!');
 
     tabs.forEach(tab => {
@@ -890,7 +913,9 @@ shieldToggleSwitch.addEventListener('change', async () => {
   } else {
     localStorage.removeItem('shaktiman_shield_disabled_' + host);
   }
-  await ipcRenderer.invoke('toggle-shield', { host, enabled });
+  if (api.toggleShield) {
+    await api.toggleShield(host, enabled);
+  }
   updateShieldPopover();
   showToast(enabled ? `⚡ Shields active for ${host}` : `⚠️ Shields paused for ${host}`);
 });
@@ -903,19 +928,6 @@ shieldResetBtn.addEventListener('click', () => {
     updateShieldPopover();
     const wv = document.getElementById(`wv-${tab.id}`);
     if (wv) wv.reload();
-  }
-});
-
-ipcRenderer.on('tracker-blocked', (event, data) => {
-  const matchingTab = tabs.find(t => t.webContentsId === data.webContentsId) || tabs.find(t => t.id === activeTabId);
-  if (matchingTab) {
-    matchingTab.blockedTrackers.push(data.url);
-    if (matchingTab.id === activeTabId) {
-      trackerCountText.textContent = matchingTab.blockedTrackers.length;
-      if (shieldPopover.classList.contains('active')) {
-        updateShieldPopover();
-      }
-    }
   }
 });
 
@@ -996,8 +1008,10 @@ function toggleSplitScreen() {
   const secondaryWv = document.createElement('webview');
   secondaryWv.id = `wv-sec-${tab.id}`;
   secondaryWv.setAttribute('allowpopups', 'true');
-  secondaryWv.setAttribute('webpreferences', 'contextIsolation=false');
-  secondaryWv.setAttribute('preload', PRELOAD_SCRIPT);
+  secondaryWv.setAttribute('webpreferences', 'contextIsolation=true, nodeIntegration=false, webSecurity=true, allowRunningInsecureContent=false');
+  if (preloadPath) {
+    secondaryWv.setAttribute('preload', preloadPath);
+  }
   secondaryWv.src = 'http://localhost:8000/';
 
   miniInput.addEventListener('keydown', (e) => {
@@ -1065,14 +1079,13 @@ screenshotBtn.addEventListener('click', async () => {
   try {
     const image = await wv.capturePage();
     const dataUrl = image.toDataURL();
-    const res = await ipcRenderer.invoke('save-screenshot', {
-      dataUrl,
-      filename: (tab.title || 'page').slice(0, 30)
-    });
-    if (res.success) {
-      showToast('📸 Screenshot saved to Downloads: ' + res.filename);
-    } else {
-      showToast('Screenshot save failed: ' + res.error);
+    if (api.saveScreenshot) {
+      const res = await api.saveScreenshot(dataUrl, (tab.title || 'page').slice(0, 30));
+      if (res.success) {
+        showToast('📸 Screenshot saved to Downloads: ' + res.filename);
+      } else {
+        showToast('Screenshot save failed: ' + res.error);
+      }
     }
   } catch (err) {
     showToast('Capture error: ' + err.message);
@@ -1197,14 +1210,16 @@ clipUrlBtn.addEventListener('click', () => {
 clipSelectionBtn.addEventListener('click', async () => {
   const tab = tabs.find(t => t.id === activeTabId);
   if (!tab || !tab.webContentsId) return;
-  const ctx = await ipcRenderer.invoke('extract-page-context', tab.webContentsId);
-  if (ctx && ctx.selectedText) {
-    const quote = `\n> ${ctx.selectedText}\n— *${ctx.title}*\n`;
-    scratchpadTextarea.value += quote;
-    localStorage.setItem('shaktiman_scratchpad', scratchpadTextarea.value);
-    showToast('Page selection clipped to Scratchpad!');
-  } else {
-    showToast('No text selected on page to clip');
+  if (api.extractPageContext) {
+    const ctx = await api.extractPageContext(tab.webContentsId);
+    if (ctx && ctx.selectedText) {
+      const quote = `\n> ${ctx.selectedText}\n— *${ctx.title}*\n`;
+      scratchpadTextarea.value += quote;
+      localStorage.setItem('shaktiman_scratchpad', scratchpadTextarea.value);
+      showToast('Page selection clipped to Scratchpad!');
+    } else {
+      showToast('No text selected on page to clip');
+    }
   }
 });
 
@@ -1237,7 +1252,7 @@ async function seedSampleIndex() {
 }
 
 function openAiOverviewQuick() {
-  if (getCredits() <= 0) {
+  if (currentCredits <= 0) {
     openPaywallModal();
     return;
   }
@@ -1249,7 +1264,7 @@ function openAiOverviewQuick() {
 }
 
 async function runAiAction(action) {
-  if (getCredits() <= 0) {
+  if (currentCredits <= 0) {
     openPaywallModal();
     return;
   }
@@ -1260,8 +1275,8 @@ async function runAiAction(action) {
 
   const tab = tabs.find(t => t.id === activeTabId);
   let pageContext = null;
-  if (tab && tab.webContentsId) {
-    pageContext = await ipcRenderer.invoke('extract-page-context', tab.webContentsId);
+  if (tab && tab.webContentsId && api.extractPageContext) {
+    pageContext = await api.extractPageContext(tab.webContentsId);
   }
 
   if (action === 'chat-page') {
@@ -1288,7 +1303,8 @@ async function sendAiMessage(context = null) {
   const text = sidebarInput.value.trim();
   if (!text) return;
 
-  if (!checkAndDeductCredit()) {
+  const allowed = await checkAndDeductCredit();
+  if (!allowed) {
     return;
   }
 
@@ -1306,8 +1322,8 @@ async function sendAiMessage(context = null) {
 
   const currentTab = tabs.find(t => t.id === activeTabId);
   let ctxData = context;
-  if (!ctxData && currentTab && currentTab.webContentsId) {
-    ctxData = await ipcRenderer.invoke('extract-page-context', currentTab.webContentsId);
+  if (!ctxData && currentTab && currentTab.webContentsId && api.extractPageContext) {
+    ctxData = await api.extractPageContext(currentTab.webContentsId);
   }
 
   try {
@@ -1369,7 +1385,7 @@ window.addEventListener('keydown', (e) => {
       return;
     }
     if (paywallModal && paywallModal.classList.contains('active')) {
-      if (getCredits() <= 0) {
+      if (currentCredits <= 0) {
         if (paywallCard) {
           paywallCard.classList.remove('shake');
           void paywallCard.offsetWidth;
@@ -1427,7 +1443,7 @@ window.addEventListener('keydown', (e) => {
   }
 });
 
-updateCreditUI(getCredits());
+initSecurityAndCredits();
 initWallpaperMode();
 renderFavorites();
 createTab();

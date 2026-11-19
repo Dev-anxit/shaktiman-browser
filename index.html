@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' http://127.0.0.1:8000 http://localhost:8000 https:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: http://127.0.0.1:8000 http://localhost:8000; font-src 'self' data:; connect-src 'self' http://127.0.0.1:8000 http://localhost:8000 https:; object-src 'none'; frame-src 'self';">
   <title>Shaktiman Browser</title>
   <link rel="icon" type="image/png" href="assets/logo.png">
   <link rel="stylesheet" href="styles.css">
@@ -323,14 +324,10 @@
       </div>
 
       <div class="paywall-pass-row">
-        <input type="text" class="pass-input" id="passCodeInput" placeholder="Enter code (e.g. SHAKTI999)..." autocomplete="off">
+        <input type="text" class="pass-input" id="passCodeInput" placeholder="Enter activation voucher or pass code..." autocomplete="off">
         <button class="pass-verify-btn" onclick="handleRedeemPass()">Verify & Unlock</button>
       </div>
       <div class="pass-feedback-msg" id="passFeedbackMsg"></div>
-
-      <div class="paywall-demo-box">
-        <span>Developer / Demo Bypass: Enter code <code>SHAKTI999</code> or <code>gimme_Credits</code></span>
-      </div>
     </div>
   </div>
 

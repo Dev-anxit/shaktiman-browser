@@ -10,6 +10,7 @@ from typing import Optional
 from fastapi import FastAPI, Query, HTTPException
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import requests
 from ddgs import DDGS
@@ -214,6 +215,19 @@ async def lifespan(app: FastAPI):
     yield
 
 app = FastAPI(title="Shaktiman Browser API by DevXanxit", contact={"name": "DevXanxit", "url": "https://ankit-portfolio-ten-tawny.vercel.app/"}, lifespan=lifespan)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:8000",
+        "http://127.0.0.1:8000"
+    ],
+    allow_origin_regex=r"^file://.*",
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["*"],
+)
+
 os.makedirs("assets", exist_ok=True)
 app.mount("/assets", StaticFiles(directory="assets"), name="assets")
 
@@ -1378,3 +1392,7 @@ def stats_api():
     return {
         "total_docs": engine.doc_count
     }
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("app:app", host="127.0.0.1", port=8000, reload=False)

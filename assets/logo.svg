@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <radialGradient id="dxBg" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#1e1b4b"/>
+      <stop offset="60%" stop-color="#090d16"/>
+      <stop offset="100%" stop-color="#030712"/>
+    </radialGradient>
+    <linearGradient id="goldGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fef08a"/>
+      <stop offset="50%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#b45309"/>
+    </linearGradient>
+    <linearGradient id="cyanEnergy" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#06b6d4"/>
+      <stop offset="50%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#e0f2fe"/>
+    </linearGradient>
+    <linearGradient id="crimsonAccent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f43f5e"/>
+      <stop offset="100%" stop-color="#be123c"/>
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+
+  <circle cx="256" cy="256" r="250" fill="url(#dxBg)" stroke="url(#goldGlow)" stroke-width="4"/>
+  <circle cx="256" cy="256" r="236" fill="none" stroke="rgba(56, 189, 248, 0.4)" stroke-width="2" stroke-dasharray="8 6"/>
+  <circle cx="256" cy="256" r="222" fill="none" stroke="rgba(245, 158, 11, 0.3)" stroke-width="1.5"/>
+
+  <g transform="translate(256, 256)" filter="url(#glow)">
+    <polygon points="0,-190 28,-75 134,-134 75,-28 190,0 75,28 134,134 28,75 0,190 -28,75 -134,134 -75,28 -190,0 -75,-28 -134,-134 -28,-75" fill="rgba(245, 158, 11, 0.18)" stroke="url(#goldGlow)" stroke-width="3"/>
+  </g>
+
+  <g transform="translate(256, 256)">
+    <polygon points="0,-165 48,-48 165,0 48,48 0,165 -48,48 -165,0 -48,-48" fill="rgba(15, 23, 42, 0.85)" stroke="url(#cyanEnergy)" stroke-width="4"/>
+    <polygon points="0,-140 38,-38 140,0 38,38 0,140 -38,38 -140,0 -38,-38" fill="none" stroke="url(#goldGlow)" stroke-width="2"/>
+  </g>
+
+  <path d="M256,120 L330,170 L330,300 L256,380 L182,300 L182,170 Z" fill="rgba(30, 27, 75, 0.9)" stroke="url(#goldGlow)" stroke-width="5" filter="url(#glow)"/>
+
+  <path d="M275,150 L205,270 L255,270 L235,360 L315,240 L265,240 Z" fill="url(#goldGlow)" stroke="#fef08a" stroke-width="2" filter="url(#glow)"/>
+
+  <text x="256" y="425" text-anchor="middle" fill="url(#cyanEnergy)" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="28" font-weight="900" letter-spacing="6">DEVXANXIT</text>
+  <text x="256" y="450" text-anchor="middle" fill="#94a3b8" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="14" font-weight="700" letter-spacing="3">SHAKTIMAN BROWSER</text>
+</svg>

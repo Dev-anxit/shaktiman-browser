@@ -4,13 +4,22 @@
   "description": "Shaktiman Browser - High-dynamic AI desktop browser and private search engine built by DevXanxit",
   "main": "main.js",
   "author": "DevXanxit <https://ankit-portfolio-ten-tawny.vercel.app/>",
-  "copyright": "Copyright © 2026 DevXanxit",
+  "copyright": "Copyright © 2026 DevXanxit. All Rights Reserved.",
   "homepage": "https://ankit-portfolio-ten-tawny.vercel.app/",
   "build": {
-    "appId": "com.devxanxit.shaktimanbrowser"
+    "appId": "com.devxanxit.shaktimanbrowser",
+    "productName": "Shaktiman Browser",
+    "copyright": "Copyright © 2026 DevXanxit. All Rights Reserved.",
+    "mac": {
+      "category": "public.app-category.productivity",
+      "target": [
+        "dmg",
+        "zip"
+      ]
+    }
   },
   "scripts": {
-    "start": "electron ."
+    "start": "env -u ELECTRON_RUN_AS_NODE electron ."
   },
   "dependencies": {
     "@ghostery/adblocker-electron": "^2.20.3",
