@@ -41,5 +41,7 @@ ELECTRON_RUN_AS_NODE= npm start
 - **Dual BM25 & Live Metasearch**: In-memory Okapi BM25 ranking paired with live DDGS metasearch fallback.
 - **AI Synthesis & Overview**: Query synthesis with real hyperlinked sources and citations.
 - **Funny Animals & Memes Wallpaper Engine**: Live dynamic backgrounds with Cats, Dogs, Memes, Mixed Chaos, and Aurora modes.
-- **Agentic AI Studio**: Real-time DOM context extraction and autonomous browser action execution.
+- **Autonomous Shaktiman AI Agent & Visual Credit System**: Persistent gamified credit meter (`shaktiman_credits` in `localStorage`), initialized to 10 credits with real-time UI status (`⚡ Shaktiman AI (10 credits)`).
+- **Agentic Automation Capabilities**: Interactive one-click actions: "Chat with Page", "Draft Response", "Autofill Page Data", "Scan for Navigation Tasks", and "Summarize Tab".
+- **Digital Invoice Paywall Modal**: High-voltage urgent paywall alert ("💥 Energy Exhausted, Boss!") triggered when credits reach 0, featuring instant verification pass bypass (`SHAKTI999` / `gimme_Credits`) and top-up CTA checkout.
 - **Privacy Shield & Burn Session**: Tracker and ad blocking with DuckDuckGo-style instant data burning.

@@ -55,6 +55,136 @@ const downloadWpBtn = document.getElementById('downloadWpBtn');
 const captionShuffleBtn = document.getElementById('captionShuffleBtn');
 const floatingShuffleBtn = document.getElementById('floatingShuffleBtn');
 
+const aiCreditLabel = document.getElementById('aiCreditLabel');
+const creditCountBadge = document.getElementById('creditCountBadge');
+const drawerCreditCounter = document.getElementById('drawerCreditCounter');
+const drawerCreditMeter = document.getElementById('drawerCreditMeter');
+const paywallModal = document.getElementById('paywallModal');
+const paywallCard = document.getElementById('paywallCard');
+const passCodeInput = document.getElementById('passCodeInput');
+const passFeedbackMsg = document.getElementById('passFeedbackMsg');
+
+function getCredits() {
+  const saved = localStorage.getItem('shaktiman_credits');
+  if (saved === null || isNaN(parseInt(saved, 10))) {
+    localStorage.setItem('shaktiman_credits', '10');
+    return 10;
+  }
+  return parseInt(saved, 10);
+}
+
+function updateCreditUI(credits) {
+  if (creditCountBadge) creditCountBadge.textContent = credits;
+  if (aiCreditLabel) {
+    aiCreditLabel.innerHTML = `⚡ Shaktiman AI (${credits} ${credits === 1 ? 'credit' : 'credits'})`;
+  }
+  if (drawerCreditCounter) {
+    drawerCreditCounter.textContent = `⚡ ${credits} ${credits === 1 ? 'credit' : 'credits'} left`;
+  }
+  if (drawerCreditMeter) {
+    drawerCreditMeter.textContent = `${credits} / 100 Credits Remaining`;
+  }
+
+  if (aiToggleBtn) {
+    if (credits <= 0) {
+      aiToggleBtn.classList.add('exhausted');
+      aiToggleBtn.classList.remove('pulsing');
+    } else {
+      aiToggleBtn.classList.remove('exhausted');
+      aiToggleBtn.classList.add('pulsing');
+    }
+  }
+}
+
+function checkAndDeductCredit() {
+  try {
+    let credits = getCredits();
+    if (credits <= 0) {
+      openPaywallModal();
+      return false;
+    }
+    credits -= 1;
+    localStorage.setItem('shaktiman_credits', credits.toString());
+    updateCreditUI(credits);
+    return true;
+  } catch (err) {
+    return false;
+  }
+}
+
+function openPaywallModal() {
+  if (paywallModal) {
+    paywallModal.classList.add('active');
+    if (passCodeInput) {
+      passCodeInput.value = '';
+      setTimeout(() => passCodeInput.focus(), 150);
+    }
+    if (passFeedbackMsg) {
+      passFeedbackMsg.textContent = '';
+      passFeedbackMsg.className = 'pass-feedback-msg';
+    }
+  }
+}
+
+function closePaywallModal() {
+  if (paywallModal) {
+    paywallModal.classList.remove('active');
+  }
+}
+
+function handleBuyCredits() {
+  window.open('https://your-payment-link.com/topup', '_blank');
+}
+
+function handleRedeemPass() {
+  const code = passCodeInput ? passCodeInput.value.trim() : '';
+  if (!code) {
+    if (paywallCard) {
+      paywallCard.classList.remove('shake');
+      void paywallCard.offsetWidth;
+      paywallCard.classList.add('shake');
+    }
+    if (passFeedbackMsg) {
+      passFeedbackMsg.textContent = 'Please enter a verification pass code.';
+      passFeedbackMsg.className = 'pass-feedback-msg error';
+    }
+    return;
+  }
+
+  const clean = code.toUpperCase();
+  if (clean === 'SHAKTI999' || code.toLowerCase() === 'gimme_credits' || clean === 'SHAKTIMAN100') {
+    localStorage.setItem('shaktiman_credits', '100');
+    updateCreditUI(100);
+    if (passFeedbackMsg) {
+      passFeedbackMsg.textContent = '⚡ Code Verified! 100 Credits Added!';
+      passFeedbackMsg.className = 'pass-feedback-msg success';
+    }
+    setTimeout(() => {
+      closePaywallModal();
+      showToast('⚡ Supercharged! 100 Shaktiman AI Credits Unlocked!');
+    }, 400);
+  } else {
+    if (paywallCard) {
+      paywallCard.classList.remove('shake');
+      void paywallCard.offsetWidth;
+      paywallCard.classList.add('shake');
+    }
+    if (passFeedbackMsg) {
+      passFeedbackMsg.textContent = '💥 Invalid pass code! Try SHAKTI999 or gimme_Credits';
+      passFeedbackMsg.className = 'pass-feedback-msg error';
+    }
+  }
+}
+
+if (passCodeInput) {
+  passCodeInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleRedeemPass();
+    }
+  });
+}
+
 function setWallpaperMode(mode) {
   localStorage.setItem('shaktiman_wallpaper_mode', mode);
   themeMenu.classList.remove('open');
@@ -698,12 +828,23 @@ async function seedSampleIndex() {
 }
 
 function openAiOverviewQuick() {
-  toggleSidebar();
-  sidebarInput.value = 'What can you do as Shaktiman AI Assistant?';
+  if (getCredits() <= 0) {
+    openPaywallModal();
+    return;
+  }
+  if (!aiSidebar.classList.contains('open')) {
+    toggleSidebar();
+  }
+  sidebarInput.value = 'What can you do as Shaktiman Autonomous Agent?';
   sendAiMessage();
 }
 
 async function runAiAction(action) {
+  if (getCredits() <= 0) {
+    openPaywallModal();
+    return;
+  }
+
   if (!aiSidebar.classList.contains('open')) {
     toggleSidebar();
   }
@@ -714,8 +855,16 @@ async function runAiAction(action) {
     pageContext = await ipcRenderer.invoke('extract-page-context', tab.webContentsId);
   }
 
-  if (action === 'summarize') {
-    sidebarInput.value = 'Summarize this page in 3 clear bullet points.';
+  if (action === 'chat-page') {
+    sidebarInput.value = 'Chat with Page: Analyze this active webpage and provide an executive briefing of its key arguments and data.';
+  } else if (action === 'draft-response') {
+    sidebarInput.value = 'Draft Response: Synthesize this webpage content into an articulate, professional response and action plan.';
+  } else if (action === 'autofill-data') {
+    sidebarInput.value = 'Autofill Page Data: Inspect the page structure and interactive form inputs to prepare structured autofill data.';
+  } else if (action === 'scan-tasks') {
+    sidebarInput.value = 'Scan for Navigation Tasks: Parse page links, action triggers, and primary workflows to recommend next steps.';
+  } else if (action === 'summarize') {
+    sidebarInput.value = 'Summarize Tab: Provide 3 clear bullet points capturing the core insights of this page.';
   } else if (action === 'takeaways') {
     sidebarInput.value = 'Extract the key takeaways and insights from this page.';
   } else if (action === 'translate') {
@@ -729,6 +878,10 @@ async function runAiAction(action) {
 async function sendAiMessage(context = null) {
   const text = sidebarInput.value.trim();
   if (!text) return;
+
+  if (!checkAndDeductCredit()) {
+    return;
+  }
 
   const userBubble = document.createElement('div');
   userBubble.className = 'chat-bubble user';
@@ -793,6 +946,22 @@ window.addEventListener('keydown', (e) => {
     document.activeElement.tagName === 'TEXTAREA'
   );
 
+  if (e.key === 'Escape') {
+    if (paywallModal && paywallModal.classList.contains('active')) {
+      if (getCredits() <= 0) {
+        if (paywallCard) {
+          paywallCard.classList.remove('shake');
+          void paywallCard.offsetWidth;
+          paywallCard.classList.add('shake');
+        }
+        return;
+      } else {
+        closePaywallModal();
+        return;
+      }
+    }
+  }
+
   if (isCmdOrCtrl && e.key.toLowerCase() === 't') {
     e.preventDefault();
     createTab();
@@ -819,6 +988,7 @@ window.addEventListener('keydown', (e) => {
   }
 });
 
+updateCreditUI(getCredits());
 initWallpaperMode();
 renderFavorites();
 createTab();
