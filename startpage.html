@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="aurora">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shaktiman Start Page</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+    :root, [data-theme="aurora"] {
+      --bg-layer: radial-gradient(at 0% 0%, #4338ca 0px, transparent 50%),
+                  radial-gradient(at 100% 0%, #7e22ce 0px, transparent 50%),
+                  radial-gradient(at 100% 100%, #0e7490 0px, transparent 50%),
+                  radial-gradient(at 0% 100%, #be185d 0px, transparent 50%),
+                  #070b14;
+      --glass-bg: rgba(18, 22, 36, 0.72);
+      --glass-border: rgba(255, 255, 255, 0.18);
+      --glass-pill: rgba(18, 22, 36, 0.85);
+      --text-primary: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent-glow: rgba(56, 189, 248, 0.35);
+      --spring: cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    html, body {
+      min-height: 100vh;
+      width: 100%;
+      background: transparent !important;
+      color: var(--text-primary);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+    div#bg-layer {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      background: var(--bg-layer);
+      background-size: cover;
+      background-position: center;
+      transition: background-image 0.6s ease-in-out, background 0.6s ease;
+      z-index: -2;
+      pointer-events: none;
+    }
+    div#bg-vignette {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      background: radial-gradient(circle at center, rgba(12, 14, 24, 0.42) 0%, rgba(12, 14, 24, 0.72) 100%), rgba(12, 14, 24, 0.58);
+      pointer-events: none;
+      z-index: -1;
+      transition: opacity 0.6s ease;
+    }
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.6;
+      animation: floatMotion 20s ease-in-out infinite alternate;
+      pointer-events: none;
+    }
+    .orb-a {
+      width: 480px;
+      height: 480px;
+      background: #6366f1;
+      top: 5%;
+      left: 10%;
+    }
+    .orb-b {
+      width: 520px;
+      height: 520px;
+      background: #ec4899;
+      top: 35%;
+      right: 12%;
+      animation-duration: 24s;
+    }
+    @keyframes floatMotion {
+      0% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(60px, -40px) scale(1.1); }
+      100% { transform: translate(-50px, 50px) scale(0.95); }
+    }
+    .container {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      max-width: 820px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2rem;
+    }
+    .clock-area {
+      text-align: center;
+    }
+    .clock-time {
+      font-size: 4rem;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 1;
+      margin-bottom: 0.4rem;
+      text-shadow: 0 2px 14px rgba(0, 0, 0, 0.7);
+    }
+    .clock-greeting {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: #e2e8f0;
+      text-shadow: 0 1px 8px rgba(0, 0, 0, 0.6);
+    }
+    .search-pill-card {
+      width: 100%;
+      max-width: 680px;
+      position: relative;
+      background: rgba(18, 22, 36, 0.72);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 20px;
+      padding: 6px 8px 6px 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 16px 45px rgba(0, 0, 0, 0.35);
+      transition: all 0.3s var(--spring);
+    }
+    .search-pill-card:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px var(--accent-glow), 0 16px 45px rgba(0, 0, 0, 0.4);
+      transform: translateY(-2px);
+    }
+    .search-input {
+      flex: 1;
+      height: 44px;
+      background: transparent;
+      border: none;
+      outline: none;
+      font-size: 1.1rem;
+      color: var(--text-primary);
+      user-select: text;
+    }
+    .search-btn {
+      height: 40px;
+      padding: 0 18px;
+      border-radius: 14px;
+      border: none;
+      background: var(--accent);
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+    .tiles-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+      gap: 14px;
+      width: 100%;
+    }
+    .tile {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 8px;
+      border-radius: 14px;
+      background: rgba(18, 22, 36, 0.72);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      cursor: pointer;
+      text-decoration: none;
+      color: var(--text-primary);
+      transition: all 0.2s var(--spring);
+      text-align: center;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    }
+    .tile:hover {
+      transform: translateY(-3px);
+      border-color: var(--accent);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    }
+    .tile-glyph {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      font-weight: 700;
+      background: rgba(255, 255, 255, 0.08);
+    }
+    .tile-title {
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .theme-pill-bar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      background: rgba(18, 22, 36, 0.85);
+      backdrop-filter: blur(24px);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 30px;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.35);
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .theme-pill-btn {
+      padding: 5px 12px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 20px;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s var(--spring);
+    }
+    .theme-pill-btn.active, .theme-pill-btn:hover {
+      background: var(--accent);
+      color: #ffffff;
+    }
+    .wallpaper-caption-pill {
+      position: fixed;
+      bottom: 24px;
+      left: 24px;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px 6px 8px;
+      background: rgba(18, 22, 36, 0.85);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 30px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+      max-width: 440px;
+      transition: all 0.3s var(--spring);
+    }
+    .wallpaper-caption-pill.collapsed {
+      max-width: 44px;
+      padding: 6px;
+      overflow: hidden;
+    }
+    .wallpaper-caption-pill.collapsed .caption-content,
+    .wallpaper-caption-pill.collapsed .caption-action-btn {
+      display: none;
+    }
+    .caption-toggle-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: none;
+      background: rgba(255, 255, 255, 0.12);
+      color: var(--text-primary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      transition: transform 0.3s ease;
+      flex-shrink: 0;
+    }
+    .wallpaper-caption-pill.collapsed .caption-toggle-btn {
+      transform: rotate(180deg);
+    }
+    .caption-content {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+    .caption-badge {
+      font-size: 0.7rem;
+      font-weight: 800;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      white-space: nowrap;
+    }
+    .caption-title {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 230px;
+    }
+    .caption-action-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: none;
+      background: rgba(255, 255, 255, 0.12);
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+    .caption-action-btn:hover {
+      background: var(--accent);
+      color: #ffffff;
+    }
+    .floating-shuffle-pill {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      background: rgba(18, 22, 36, 0.85);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 30px;
+      color: #ffffff;
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+      transition: all 0.25s var(--spring);
+    }
+    .floating-shuffle-pill:hover {
+      background: var(--accent);
+      transform: translateY(-2px);
+      box-shadow: 0 12px 35px var(--accent-glow);
+    }
+    .floating-shuffle-pill.loading svg,
+    .caption-action-btn.loading svg {
+      animation: spinWp 0.7s linear infinite;
+    }
+    @keyframes spinWp {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div id="bg-layer">
+    <div class="orb orb-a"></div>
+    <div class="orb orb-b"></div>
+  </div>
+  <div id="bg-vignette"></div>
+
+  <div class="container">
+    <div class="clock-area">
+      <div class="clock-time" id="clockTime">12:00</div>
+      <div class="clock-greeting" id="clockGreeting">Welcome to Shaktiman</div>
+    </div>
+
+    <form class="search-pill-card" id="startForm">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.6;">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+      <input type="text" class="search-input" id="startInput" placeholder="Search knowledge base, local docs, or type URL..." autofocus autocomplete="off">
+      <button type="submit" class="search-btn">Search</button>
+    </form>
+
+    <div class="tiles-grid" id="tilesGrid"></div>
+
+    <div class="theme-pill-bar">
+      <button class="theme-pill-btn active" data-mode="mixed" onclick="setWallpaperMode('mixed')">Mixed Chaos</button>
+      <button class="theme-pill-btn" data-mode="cats" onclick="setWallpaperMode('cats')">Funny Cats</button>
+      <button class="theme-pill-btn" data-mode="dogs" onclick="setWallpaperMode('dogs')">Funny Dogs</button>
+      <button class="theme-pill-btn" data-mode="memes" onclick="setWallpaperMode('memes')">Programmer Memes</button>
+      <button class="theme-pill-btn" data-mode="aurora" onclick="setWallpaperMode('aurora')">Aurora Gradient</button>
+    </div>
+  </div>
+
+  <div class="wallpaper-caption-pill" id="wallpaperCaptionPill">
+    <button class="caption-toggle-btn" id="captionToggleBtn" title="Toggle Info">&#9664;</button>
+    <div class="caption-content" id="captionContent">
+      <span class="caption-badge" id="captionBadge">&#127922; Mixed Chaos</span>
+      <span class="caption-title" id="captionTitle">Funny Animals & Memes</span>
+    </div>
+    <a class="caption-action-btn" id="downloadWpBtn" href="#" target="_blank" download="shaktiman-wallpaper.jpg" title="Download Wallpaper">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+        <polyline points="7 10 12 15 17 10"></polyline>
+        <line x1="12" y1="15" x2="12" y2="3"></line>
+      </svg>
+    </a>
+    <button class="caption-action-btn" id="captionShuffleBtn" title="Shuffle Wallpaper">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="23 4 23 10 17 10"></polyline>
+        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+      </svg>
+    </button>
+  </div>
+
+  <button class="floating-shuffle-pill" id="floatingShuffleBtn" title="Shuffle Wallpaper (Press S)">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="16 3 21 3 21 8"></polyline>
+      <line x1="4" y1="20" x2="21" y2="3"></line>
+      <polyline points="21 16 21 21 16 21"></polyline>
+      <line x1="15" y1="15" x2="21" y2="21"></line>
+      <line x1="4" y1="4" x2="9" y2="9"></line>
+    </svg>
+    <span>Shuffle Wallpaper</span>
+  </button>
+
+  <script>
+    const TILES = [
+      { title: 'Local Search', url: 'http://localhost:8000/', glyph: '&#10022;' },
+      { title: 'GitHub', url: 'https://github.com', glyph: 'GH' },
+      { title: 'Wikipedia', url: 'https://en.wikipedia.org', glyph: 'W' },
+      { title: 'Hacker News', url: 'https://news.ycombinator.com', glyph: 'Y' },
+      { title: 'Reddit', url: 'https://reddit.com', glyph: 'R' },
+      { title: 'DuckDuckGo', url: 'https://duckduckgo.com', glyph: 'DDG' },
+      { title: 'YouTube', url: 'https://youtube.com', glyph: 'YT' },
+      { title: 'MDN Web', url: 'https://developer.mozilla.org', glyph: 'MDN' }
+    ];
+
+    function updateClock() {
+      const now = new Date();
+      const hours = now.getHours();
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const seconds = String(now.getSeconds()).padStart(2, '0');
+      const isAm = hours < 12;
+      const formattedHours = hours % 12 || 12;
+      document.getElementById('clockTime').textContent = `${formattedHours}:${minutes}:${seconds} ${isAm ? 'AM' : 'PM'}`;
+
+      let greeting = 'Good evening';
+      if (hours < 12) greeting = 'Good morning';
+      else if (hours < 17) greeting = 'Good afternoon';
+      document.getElementById('clockGreeting').textContent = `${greeting}, Shaktiman explorer`;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    function renderTiles() {
+      const grid = document.getElementById('tilesGrid');
+      grid.innerHTML = TILES.map(t => `
+        <a class="tile" href="${t.url}">
+          <div class="tile-glyph">${t.glyph}</div>
+          <div class="tile-title">${t.title}</div>
+        </a>
+      `).join('');
+    }
+    renderTiles();
+
+    function parseInput(val) {
+      const trimmed = val.trim();
+      if (!trimmed) return '';
+      if (trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('file://')) {
+        return trimmed;
+      }
+      const domainRegex = /^([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(:\d+)?(\/.*)?$/;
+      const localRegex = /^localhost(:\d+)?(\/.*)?$/;
+      const ipRegex = /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(:\d+)?(\/.*)?$/;
+      if (localRegex.test(trimmed) || ipRegex.test(trimmed)) {
+        return 'http://' + trimmed;
+      }
+      if (domainRegex.test(trimmed)) {
+        return 'https://' + trimmed;
+      }
+      return 'http://localhost:8000/?q=' + encodeURIComponent(trimmed);
+    }
+
+    document.getElementById('startForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const input = document.getElementById('startInput').value;
+      const target = parseInput(input);
+      if (target) {
+        window.location.href = target;
+      }
+    });
+
+    let isFetchingWallpaper = false;
+    const bgLayer = document.getElementById('bg-layer');
+    const bgVignette = document.getElementById('bg-vignette');
+    const captionBadge = document.getElementById('captionBadge');
+    const captionTitle = document.getElementById('captionTitle');
+    const downloadWpBtn = document.getElementById('downloadWpBtn');
+    const floatingShuffleBtn = document.getElementById('floatingShuffleBtn');
+    const captionShuffleBtn = document.getElementById('captionShuffleBtn');
+    const captionToggleBtn = document.getElementById('captionToggleBtn');
+    const wallpaperCaptionPill = document.getElementById('wallpaperCaptionPill');
+
+    function setShuffleLoadingState(isLoading) {
+      if (isLoading) {
+        floatingShuffleBtn.classList.add('loading');
+        captionShuffleBtn.classList.add('loading');
+      } else {
+        floatingShuffleBtn.classList.remove('loading');
+        captionShuffleBtn.classList.remove('loading');
+      }
+    }
+
+    function setWallpaperMode(mode) {
+      localStorage.setItem('shaktiman_wallpaper_mode', mode);
+      document.querySelectorAll('.theme-pill-btn').forEach(btn => {
+        if (btn.getAttribute('data-mode') === mode) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      });
+      fetchNextWallpaper();
+    }
+
+    async function fetchNextWallpaper() {
+      if (isFetchingWallpaper) return;
+      const mode = localStorage.getItem('shaktiman_wallpaper_mode') || 'mixed';
+
+      if (mode === 'aurora') {
+        applyAuroraWallpaper();
+        return;
+      }
+
+      isFetchingWallpaper = true;
+      setShuffleLoadingState(true);
+
+      let targetMode = mode;
+      if (mode === 'mixed') {
+        const pool = ['cats', 'dogs', 'memes', 'memes'];
+        targetMode = pool[Math.floor(Math.random() * pool.length)];
+      }
+
+      try {
+        if (targetMode === 'cats') {
+          await fetchCatWallpaper();
+        } else if (targetMode === 'dogs') {
+          await fetchDogWallpaper();
+        } else if (targetMode === 'memes') {
+          await fetchMemeWallpaper();
+        }
+      } catch (err) {
+        applyFallbackWallpaper();
+      } finally {
+        isFetchingWallpaper = false;
+        setShuffleLoadingState(false);
+      }
+    }
+
+    async function fetchCatWallpaper() {
+      let imgUrl = '';
+      let title = 'Hilarious Cat Stare';
+      try {
+        const res = await fetch('https://cataas.com/cat?json=true');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.url && data.url.startsWith('http')) {
+            imgUrl = data.url;
+          } else if (data.url && data.url.startsWith('/')) {
+            imgUrl = 'https://cataas.com' + data.url;
+          } else if (data.id || data._id) {
+            imgUrl = 'https://cataas.com/cat/' + (data.id || data._id);
+          }
+          if (data.tags && data.tags.length > 0) {
+            title = 'Funny Cat: ' + data.tags.slice(0, 3).join(', ');
+          }
+        }
+      } catch (e) {}
+
+      if (!imgUrl) {
+        imgUrl = 'https://cataas.com/cat/funny?t=' + Date.now();
+      }
+
+      await loadAndApplyImage(imgUrl, '🐱 Funny Cat', title);
+    }
+
+    async function fetchDogWallpaper() {
+      const res = await fetch('https://dog.ceo/api/breeds/image/random');
+      const data = await res.json();
+      if (data && data.message) {
+        const parts = data.message.split('/');
+        const breedIdx = parts.indexOf('breeds');
+        let breedName = 'Good Doggo';
+        if (breedIdx !== -1 && parts[breedIdx + 1]) {
+          breedName = parts[breedIdx + 1].replace('-', ' ').replace(/\b\w/g, c => c.toUpperCase());
+        }
+        await loadAndApplyImage(data.message, '🐶 Funny Dog', 'Hilarious ' + breedName);
+      } else {
+        throw new Error('Dog API failed');
+      }
+    }
+
+    async function fetchMemeWallpaper() {
+      const subreddits = ['ProgrammerHumor', 'wholesomememes'];
+      const chosenSub = subreddits[Math.floor(Math.random() * subreddits.length)];
+      const res = await fetch('https://meme-api.com/gimme/' + chosenSub);
+      const data = await res.json();
+      if (data && data.url && !data.nsfw) {
+        const badge = chosenSub === 'ProgrammerHumor' ? '💻 Programmer Meme' : '✨ Wholesome Meme';
+        await loadAndApplyImage(data.url, badge, data.title || 'Meme from r/' + chosenSub);
+      } else {
+        await fetchCatWallpaper();
+      }
+    }
+
+    function loadAndApplyImage(url, badge, title) {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+          renderWallpaper(url, badge, title);
+          resolve();
+        };
+        img.onerror = () => {
+          applyFallbackWallpaper();
+          resolve();
+        };
+        img.src = url;
+      });
+    }
+
+    function renderWallpaper(url, badge, title) {
+      const orbs = document.querySelectorAll('.orb');
+      orbs.forEach(orb => orb.style.display = 'none');
+      bgVignette.style.display = 'block';
+
+      bgLayer.style.backgroundImage = `url("${url}")`;
+      bgLayer.style.backgroundSize = 'cover';
+      bgLayer.style.backgroundPosition = 'center';
+
+      captionBadge.textContent = badge;
+      captionTitle.textContent = title;
+      downloadWpBtn.href = url;
+    }
+
+    function applyAuroraWallpaper() {
+      const orbs = document.querySelectorAll('.orb');
+      bgLayer.style.backgroundImage = '';
+      bgVignette.style.display = 'none';
+      orbs.forEach(orb => orb.style.display = 'block');
+
+      captionBadge.textContent = '✦ Aurora Mode';
+      captionTitle.textContent = 'Dynamic Aurora mesh gradient';
+      downloadWpBtn.href = '#';
+    }
+
+    function applyFallbackWallpaper() {
+      const fallbackUrl = 'https://images.dog.ceo/breeds/shiba/shiba-13.jpg';
+      renderWallpaper(fallbackUrl, '🐶 Funny Dog', 'Classic Shiba Doge');
+    }
+
+    floatingShuffleBtn.addEventListener('click', () => {
+      fetchNextWallpaper();
+    });
+
+    captionShuffleBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      fetchNextWallpaper();
+    });
+
+    captionToggleBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      wallpaperCaptionPill.classList.toggle('collapsed');
+    });
+
+    window.addEventListener('keydown', (e) => {
+      const isInputFocused = document.activeElement && (
+        document.activeElement.tagName === 'INPUT' ||
+        document.activeElement.tagName === 'TEXTAREA'
+      );
+      if (!isInputFocused && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        fetchNextWallpaper();
+      }
+    });
+
+    const initialMode = localStorage.getItem('shaktiman_wallpaper_mode') || 'mixed';
+    setWallpaperMode(initialMode);
+  </script>
+</body>
+</html>

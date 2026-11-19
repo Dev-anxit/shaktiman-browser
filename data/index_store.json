@@ -1,0 +1,58 @@
+[
+  {
+    "id": "9a1194cbfbabfb37",
+    "url": "https://en.wikipedia.org/wiki/Okapi_BM25",
+    "title": "Okapi BM25 Ranking Algorithm",
+    "content": "Okapi BM25 is a state-of-the-art ranking function widely used by search engines to estimate the relevance of documents to a given search query. It is based on the probabilistic retrieval framework developed in the 1970s and 1980s by Stephen E. Robertson, Karen Spärck Jones, and others. The core parameters are k1 (term frequency saturation) typically between 1.2 and 2.0, and b (document length normalization) typically around 0.75.",
+    "source_type": "local"
+  },
+  {
+    "id": "6355c1abf82e4fcf",
+    "url": "https://fastapi.tiangolo.com",
+    "title": "FastAPI High Performance Web Framework",
+    "content": "FastAPI is a modern, fast, high-performance web framework for building APIs with Python 3.8+ based on standard Python type hints. Key features include extreme speed on par with NodeJS and Go, fast coding, automatic interactive documentation with Swagger UI and ReDoc, and robust dependency injection.",
+    "source_type": "local"
+  },
+  {
+    "id": "4b280cc3ec88684e",
+    "url": "https://arc.net",
+    "title": "Arc Browser and Modern Glassmorphism Interface Design",
+    "content": "Arc is a revolutionary web browser developed by The Browser Company that reimagines digital workspaces with vertical pill tabs, fluid spring-physics transitions, and rich frosted glassmorphism. It uses dynamic colorful gradients, translucent sidebars, and customizable theme spaces to provide a calm, personal web experience.",
+    "source_type": "local"
+  },
+  {
+    "id": "c1af6b58492f9bf4",
+    "url": "https://github.com/browser-use/browser-use",
+    "title": "Autonomous Browser Agents and AI Automation",
+    "content": "Autonomous browser agents parse webpage document object models into structured interactive actions. Using visual perception and large language models, AI agents can navigate complex websites, fill forms, execute page actions, extract data, and verify workflows automatically.",
+    "source_type": "local"
+  },
+  {
+    "id": "cfeb5ed9903d5ce5",
+    "url": "https://crawler.docs.local",
+    "title": "Polite BFS Web Crawling Architecture",
+    "content": "Polite web crawlers implement breadth-first search traversal with strict domain boundary checks, crawl delay pacing, and robot etiquette. HTML content is parsed using BeautifulSoup to remove scripts, headers, navigation bars, and footers, leaving pristine textual records for BM25 indexing.",
+    "source_type": "local"
+  },
+  {
+    "id": "5edef9df130744a2",
+    "url": "https://duckduckgo.com/privacy",
+    "title": "Privacy-First Desktop Web Browsing",
+    "content": "Privacy-first browsers protect users from surveillance capitalism by blocking cross-site tracking cookies, fingerprinting beacons, and ad networks using onBeforeRequest network filtering. DuckDuckGo-style session fire buttons wipe cookies, caches, and storage partitions instantly.",
+    "source_type": "local"
+  },
+  {
+    "id": "cc89d201d0be7aeb",
+    "url": "https://www.electronjs.org",
+    "title": "Electron Desktop Architecture with WebContentsView",
+    "content": "Modern Electron applications employ BaseWindow and WebContentsView to orchestrate multi-tab desktop browsers with zero visual flickering. WebContentsView replaces legacy BrowserViews and webview tags, providing hardware-accelerated compositing and seamless UI layering.",
+    "source_type": "local"
+  },
+  {
+    "id": "6655adecc82a2c96",
+    "url": "https://design.aesthetic.local",
+    "title": "Strawberry Pastel and Liquid Aesthetic Design",
+    "content": "Strawberry Pastel aesthetics combine soft rose, peach, and lavender tints with high-blur frosted glass backdrops. Floating search pills, subtle borders, and spring physics create tactile, responsive interfaces that delight users on desktop and mobile viewports.",
+    "source_type": "local"
+  }
+]

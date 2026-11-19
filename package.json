@@ -1,0 +1,13 @@
+{
+  "name": "shaktiman-browser",
+  "version": "2.0.0",
+  "description": "Shaktiman Browser - High-dynamic AI desktop browser and private search engine",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "electron": "^45.4.1"
+  }
+}
