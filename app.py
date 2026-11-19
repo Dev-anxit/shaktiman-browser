@@ -9,6 +9,7 @@ from contextlib import asynccontextmanager
 from typing import Optional
 from fastapi import FastAPI, Query, HTTPException
 from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 import requests
 from ddgs import DDGS
@@ -213,6 +214,8 @@ async def lifespan(app: FastAPI):
     yield
 
 app = FastAPI(title="Shaktiman Search Engine", lifespan=lifespan)
+os.makedirs("assets", exist_ok=True)
+app.mount("/assets", StaticFiles(directory="assets"), name="assets")
 
 class CrawlRequest(BaseModel):
     seed_url: str
@@ -238,6 +241,7 @@ HTML_PAGE = """<!DOCTYPE html>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Shaktiman Search</title>
+  <link rel="icon" type="image/png" href="/assets/logo.png">
   <style>
     * {
       box-sizing: border-box;
@@ -475,6 +479,19 @@ HTML_PAGE = """<!DOCTYPE html>
     }
     .search-hero-container.compact .hero-badge-row {
       display: none;
+    }
+    .brand-logo-img {
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      border: 2px solid rgba(251, 191, 36, 0.7);
+      box-shadow: 0 0 24px rgba(245, 158, 11, 0.5), 0 0 48px rgba(239, 68, 68, 0.3);
+      object-fit: cover;
+      transition: transform 0.35s var(--spring), box-shadow 0.35s ease;
+    }
+    .brand-logo-img:hover {
+      transform: scale(1.1) rotate(5deg);
+      box-shadow: 0 0 35px rgba(245, 158, 11, 0.75), 0 0 65px rgba(239, 68, 68, 0.45);
     }
     .brand-logo-icon {
       width: 48px;
@@ -821,7 +838,7 @@ HTML_PAGE = """<!DOCTYPE html>
   <div class="app-viewport">
     <div class="search-hero-container" id="heroContainer">
       <div class="hero-badge-row">
-        <div class="brand-logo-icon">&#10022;</div>
+        <img src="/assets/logo.png" class="brand-logo-img" alt="Shaktiman Search">
         <div class="brand-title">Shaktiman Search</div>
       </div>
 

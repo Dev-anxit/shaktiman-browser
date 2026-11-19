@@ -1,6 +1,12 @@
 # Shaktiman Browser & Private Search Engine
 
-High-dynamic AI desktop browser with BaseWindow zero-flicker WebContentsView architecture, private BM25 lexical ranking, live web metasearch via DDGS, and agentic AI sidebar automation.
+<p align="center">
+  <img src="assets/logo.png" alt="Shaktiman Browser Logo" width="200" height="200" style="border-radius: 50%; box-shadow: 0 0 35px rgba(245, 158, 11, 0.6), 0 0 70px rgba(239, 68, 68, 0.35);">
+</p>
+
+<p align="center">
+  <b>High-dynamic desktop AI browser with BaseWindow zero-flicker WebContentsView architecture, private BM25 lexical ranking, live web metasearch via DDGS, and agentic AI sidebar automation.</b>
+</p>
 
 ## Requirements
 
@@ -31,8 +37,9 @@ ELECTRON_RUN_AS_NODE= npm start
 
 ## Features
 
-- Shaktiman Search with dual Okapi BM25 in-memory indexing and live DDGS metasearch fallback.
-- AI Overview synthesizing verified query results and real source hyperlinks.
-- 5 Live dynamic glassmorphism themes: Aurora Mesh, Cyber Grid & Particles, Sunset Glass, Strawberry Pastel, and Custom Backdrop.
-- Real-time address bar sync, instant session burning (cookies, cache & storage), and ad/tracker blocker.
-- AI Studio drawer extracting page DOM context and automating browser actions.
+- **Official Shaktiman Brand Identity**: Integrated hero logo, window dock icon, and favicon.
+- **Dual BM25 & Live Metasearch**: In-memory Okapi BM25 ranking paired with live DDGS metasearch fallback.
+- **AI Synthesis & Overview**: Query synthesis with real hyperlinked sources and citations.
+- **Funny Animals & Memes Wallpaper Engine**: Live dynamic backgrounds with Cats, Dogs, Memes, Mixed Chaos, and Aurora modes.
+- **Agentic AI Studio**: Real-time DOM context extraction and autonomous browser action execution.
+- **Privacy Shield & Burn Session**: Tracker and ad blocking with DuckDuckGo-style instant data burning.

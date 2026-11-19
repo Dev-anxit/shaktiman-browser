@@ -55,6 +55,7 @@ function setupAdBlocker() {
 }
 
 function createWindow() {
+  const iconPath = path.join(__dirname, 'assets', 'logo.png');
   mainWindow = new BrowserWindow({
     width: 1440,
     height: 900,
@@ -64,12 +65,17 @@ function createWindow() {
     titleBarStyle: 'hiddenInset',
     trafficLightPosition: { x: 14, y: 14 },
     backgroundColor: '#090d16',
+    icon: iconPath,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
       webviewTag: true
     }
   });
+
+  if (process.platform === 'darwin' && app.dock && fs.existsSync(iconPath)) {
+    app.dock.setIcon(iconPath);
+  }
 
   setupAdBlocker();
   mainWindow.loadFile('index.html');

@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Shaktiman Start Page</title>
+  <link rel="icon" type="image/png" href="assets/logo.png">
   <style>
     * {
       box-sizing: border-box;
@@ -98,6 +99,26 @@
       flex-direction: column;
       align-items: center;
       gap: 2rem;
+    }
+    .start-logo-area {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: -0.75rem;
+    }
+    .start-hero-logo {
+      width: 108px;
+      height: 108px;
+      border-radius: 50%;
+      border: 3px solid rgba(251, 191, 36, 0.7);
+      box-shadow: 0 0 35px rgba(245, 158, 11, 0.55), 0 0 70px rgba(239, 68, 68, 0.35);
+      object-fit: cover;
+      transition: transform 0.35s var(--spring), box-shadow 0.35s ease;
+      cursor: pointer;
+    }
+    .start-hero-logo:hover {
+      transform: scale(1.08) rotate(4deg);
+      box-shadow: 0 0 45px rgba(245, 158, 11, 0.8), 0 0 90px rgba(239, 68, 68, 0.5);
     }
     .clock-area {
       text-align: center;
@@ -361,6 +382,9 @@
   <div id="bg-vignette"></div>
 
   <div class="container">
+    <div class="start-logo-area">
+      <img src="assets/logo.png" class="start-hero-logo" alt="Shaktiman Browser">
+    </div>
     <div class="clock-area">
       <div class="clock-time" id="clockTime">12:00</div>
       <div class="clock-greeting" id="clockGreeting">Welcome to Shaktiman</div>

@@ -592,6 +592,60 @@ html, body {
   text-align: center;
 }
 
+.start-logo-wrapper {
+  position: relative;
+  margin-bottom: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.start-logo-img {
+  width: 104px;
+  height: 104px;
+  border-radius: 50%;
+  border: 3px solid rgba(251, 191, 36, 0.7);
+  box-shadow: 0 0 35px rgba(245, 158, 11, 0.55), 0 0 70px rgba(239, 68, 68, 0.35);
+  object-fit: cover;
+  transition: transform 0.35s var(--spring), box-shadow 0.35s ease;
+}
+
+.start-logo-img:hover {
+  transform: scale(1.08) rotate(4deg);
+  box-shadow: 0 0 45px rgba(245, 158, 11, 0.8), 0 0 90px rgba(239, 68, 68, 0.5);
+}
+
+.browser-brand-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px 4px 6px;
+  border-radius: 20px;
+  background: var(--glass-pill);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.browser-brand-logo {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(251, 191, 36, 0.7);
+  object-fit: cover;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.6);
+}
+
+.browser-brand-text {
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, #fbbf24, #f97316, #ef4444);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
 .start-icon {
   width: 60px;
   height: 60px;

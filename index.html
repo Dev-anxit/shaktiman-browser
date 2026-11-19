@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Shaktiman Browser</title>
+  <link rel="icon" type="image/png" href="assets/logo.png">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -19,6 +20,10 @@
   <div class="app-container">
     <header class="browser-header">
       <div class="tab-bar-container">
+        <div class="browser-brand-pill">
+          <img src="assets/logo.png" class="browser-brand-logo" alt="Shaktiman">
+          <span class="browser-brand-text">Shaktiman</span>
+        </div>
         <div class="tabs-list" id="tabsList"></div>
         <button class="new-tab-btn" id="newTabBtn" title="New Tab (Cmd/Ctrl+T)">+</button>
       </div>
@@ -97,7 +102,9 @@
     <main class="view-container" id="viewContainer">
       <div class="start-page" id="startPage">
         <div class="start-hero">
-          <div class="start-icon">&#10022;</div>
+          <div class="start-logo-wrapper">
+            <img src="assets/logo.png" class="start-logo-img" alt="Shaktiman Browser">
+          </div>
           <h1 class="start-title">Shaktiman Browser</h1>
           <p style="color:var(--text-muted); font-size:1rem; margin-bottom:1rem;">Private BM25 search, live web metasearch, and agentic AI studio.</p>
         </div>
