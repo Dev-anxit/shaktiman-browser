@@ -1354,6 +1354,59 @@ html, body {
   color: #38bdf8;
 }
 
+.paywall-recipient-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px dashed rgba(251, 191, 36, 0.4);
+  border-radius: 12px;
+  font-size: 0.8rem;
+  color: #fbbf24;
+  text-align: center;
+}
+
+.paywall-recipient-badge b {
+  color: #ffffff;
+}
+
+.creator-footer-pill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+
+.creator-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: rgba(248, 250, 252, 0.75);
+  text-decoration: none;
+  padding: 6px 16px;
+  border-radius: 20px;
+  background: rgba(18, 22, 36, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  transition: all 0.25s var(--spring);
+}
+
+.creator-link:hover {
+  color: #38bdf8;
+  border-color: rgba(56, 189, 248, 0.5);
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.35);
+  transform: translateY(-1px);
+}
+
+.creator-bolt {
+  color: #fbbf24;
+}
+
 .paywall-cta-btn {
   width: 100%;
   padding: 14px 20px;

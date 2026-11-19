@@ -213,7 +213,7 @@ async def lifespan(app: FastAPI):
         seed_sample_data()
     yield
 
-app = FastAPI(title="Shaktiman Search Engine", lifespan=lifespan)
+app = FastAPI(title="Shaktiman Browser API by DevXanxit", contact={"name": "DevXanxit", "url": "https://ankit-portfolio-ten-tawny.vercel.app/"}, lifespan=lifespan)
 os.makedirs("assets", exist_ok=True)
 app.mount("/assets", StaticFiles(directory="assets"), name="assets")
 

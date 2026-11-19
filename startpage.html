@@ -251,6 +251,36 @@
       background: var(--accent);
       color: #ffffff;
     }
+    .creator-footer-pill {
+      margin-top: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .creator-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: rgba(248, 250, 252, 0.75);
+      text-decoration: none;
+      padding: 6px 14px;
+      border-radius: 20px;
+      background: rgba(18, 22, 36, 0.65);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      transition: all 0.25s var(--spring);
+    }
+    .creator-link:hover {
+      color: #38bdf8;
+      border-color: rgba(56, 189, 248, 0.4);
+      box-shadow: 0 0 15px rgba(56, 189, 248, 0.3);
+      transform: translateY(-1px);
+    }
+    .creator-bolt {
+      color: #fbbf24;
+    }
     .wallpaper-caption-pill {
       position: fixed;
       bottom: 24px;
@@ -407,6 +437,13 @@
       <button class="theme-pill-btn" data-mode="dogs" onclick="setWallpaperMode('dogs')">Funny Dogs</button>
       <button class="theme-pill-btn" data-mode="memes" onclick="setWallpaperMode('memes')">Programmer Memes</button>
       <button class="theme-pill-btn" data-mode="aurora" onclick="setWallpaperMode('aurora')">Aurora Gradient</button>
+    </div>
+
+    <div class="creator-footer-pill">
+      <a href="https://ankit-portfolio-ten-tawny.vercel.app/" target="_blank" class="creator-link">
+        <span class="creator-bolt">⚡</span>
+        <span>Crafted & Owned by DevXanxit © 2026</span>
+      </a>
     </div>
   </div>
 
