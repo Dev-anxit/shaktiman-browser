@@ -1,4 +1,7 @@
 const { ipcRenderer } = require('electron');
+const path = require('path');
+
+const PRELOAD_SCRIPT = path.join(__dirname, 'preload.js');
 
 let tabs = [];
 let activeTabId = null;
@@ -29,8 +32,23 @@ const reloadBtn = document.getElementById('reloadBtn');
 const omnibox = document.getElementById('omnibox');
 const omniboxClear = document.getElementById('omniboxClear');
 const omniboxIcon = document.getElementById('omniboxIcon');
+const readerBtn = document.getElementById('readerBtn');
+const splitBtn = document.getElementById('splitBtn');
+const pipBtn = document.getElementById('pipBtn');
+const screenshotBtn = document.getElementById('screenshotBtn');
+const scratchpadBtn = document.getElementById('scratchpadBtn');
+
+const shieldWrapper = document.getElementById('shieldWrapper');
 const shieldBtn = document.getElementById('shieldBtn');
 const trackerCountText = document.getElementById('trackerCountText');
+const shieldPopover = document.getElementById('shieldPopover');
+const shieldToggleSwitch = document.getElementById('shieldToggleSwitch');
+const shieldSiteHost = document.getElementById('shieldSiteHost');
+const shieldStatusLabel = document.getElementById('shieldStatusLabel');
+const shieldStatNumber = document.getElementById('shieldStatNumber');
+const shieldBlockedList = document.getElementById('shieldBlockedList');
+const shieldResetBtn = document.getElementById('shieldResetBtn');
+
 const fireBtn = document.getElementById('fireBtn');
 const aiToggleBtn = document.getElementById('aiToggleBtn');
 const aiSidebar = document.getElementById('aiSidebar');
@@ -63,6 +81,30 @@ const paywallModal = document.getElementById('paywallModal');
 const paywallCard = document.getElementById('paywallCard');
 const passCodeInput = document.getElementById('passCodeInput');
 const passFeedbackMsg = document.getElementById('passFeedbackMsg');
+
+const readerOverlay = document.getElementById('readerOverlay');
+const readerTitle = document.getElementById('readerTitle');
+const readerByline = document.getElementById('readerByline');
+const readerBody = document.getElementById('readerBody');
+const readerFontSizeDown = document.getElementById('readerFontSizeDown');
+const readerFontSizeUp = document.getElementById('readerFontSizeUp');
+const readerThemeLight = document.getElementById('readerThemeLight');
+const readerThemeSepia = document.getElementById('readerThemeSepia');
+const readerThemeDark = document.getElementById('readerThemeDark');
+const readerTtsBtn = document.getElementById('readerTtsBtn');
+const readerCloseBtn = document.getElementById('readerCloseBtn');
+
+const scratchpadDrawer = document.getElementById('scratchpadDrawer');
+const closeScratchpadBtn = document.getElementById('closeScratchpadBtn');
+const scratchpadTextarea = document.getElementById('scratchpadTextarea');
+const clipUrlBtn = document.getElementById('clipUrlBtn');
+const clipSelectionBtn = document.getElementById('clipSelectionBtn');
+const exportNotesBtn = document.getElementById('exportNotesBtn');
+const clearNotesBtn = document.getElementById('clearNotesBtn');
+const scratchpadSavedStatus = document.getElementById('scratchpadSavedStatus');
+
+let currentFontSize = 1.15;
+let currentTtsUtterance = null;
 
 function getCredits() {
   const saved = localStorage.getItem('shaktiman_credits');
@@ -188,8 +230,7 @@ if (passCodeInput) {
 function setWallpaperMode(mode) {
   localStorage.setItem('shaktiman_wallpaper_mode', mode);
   themeMenu.classList.remove('open');
-
-  const modeLabels = {
+  const labels = {
     mixed: 'Mixed Chaos',
     cats: 'Funny Cats',
     dogs: 'Funny Dogs',
@@ -197,105 +238,105 @@ function setWallpaperMode(mode) {
     aurora: 'Aurora Gradient',
     custom: 'Custom Image'
   };
-  activeThemeLabel.textContent = modeLabels[mode] || 'Wallpaper';
-
+  activeThemeLabel.textContent = labels[mode] || 'Mixed Chaos';
   fetchNextWallpaper();
 }
-
-function initWallpaperMode() {
-  const mode = localStorage.getItem('shaktiman_wallpaper_mode') || 'mixed';
-  const modeLabels = {
-    mixed: 'Mixed Chaos',
-    cats: 'Funny Cats',
-    dogs: 'Funny Dogs',
-    memes: 'Programmer Memes',
-    aurora: 'Aurora Gradient',
-    custom: 'Custom Image'
-  };
-  activeThemeLabel.textContent = modeLabels[mode] || 'Wallpaper';
-  fetchNextWallpaper();
-}
-
-themeMenuBtn.addEventListener('click', (e) => {
-  e.stopPropagation();
-  themeMenu.classList.toggle('open');
-});
-
-document.addEventListener('click', () => {
-  themeMenu.classList.remove('open');
-});
 
 function openCustomWpDialog() {
   themeMenu.classList.remove('open');
-  const url = prompt('Enter custom wallpaper image URL:');
-  if (url && url.trim()) {
-    localStorage.setItem('shaktiman_custom_bg', url.trim());
+  const customUrl = prompt('Enter image URL for custom wallpaper:', 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe');
+  if (customUrl && customUrl.trim()) {
+    localStorage.setItem('shaktiman_custom_wallpaper_url', customUrl.trim());
     setWallpaperMode('custom');
   }
 }
 
-function setShuffleLoadingState(isLoading) {
-  if (isLoading) {
-    if (floatingShuffleBtn) floatingShuffleBtn.classList.add('loading');
-    if (captionShuffleBtn) captionShuffleBtn.classList.add('loading');
-  } else {
-    if (floatingShuffleBtn) floatingShuffleBtn.classList.remove('loading');
-    if (captionShuffleBtn) captionShuffleBtn.classList.remove('loading');
+function initWallpaperMode() {
+  const saved = localStorage.getItem('shaktiman_wallpaper_mode') || 'mixed';
+  const labels = {
+    mixed: 'Mixed Chaos',
+    cats: 'Funny Cats',
+    dogs: 'Funny Dogs',
+    memes: 'Programmer Memes',
+    aurora: 'Aurora Gradient',
+    custom: 'Custom Image'
+  };
+  activeThemeLabel.textContent = labels[saved] || 'Mixed Chaos';
+
+  if (wallpaperCaptionPill && captionToggleBtn) {
+    captionToggleBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      wallpaperCaptionPill.classList.toggle('collapsed');
+      captionToggleBtn.innerHTML = wallpaperCaptionPill.classList.contains('collapsed') ? '&#9654;' : '&#9664;';
+    });
+  }
+
+  if (captionShuffleBtn) {
+    captionShuffleBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      fetchNextWallpaper();
+    });
+  }
+
+  if (floatingShuffleBtn) {
+    floatingShuffleBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      fetchNextWallpaper();
+    });
   }
 }
 
 async function fetchNextWallpaper() {
   if (isFetchingWallpaper) return;
+  isFetchingWallpaper = true;
+
+  if (captionShuffleBtn) captionShuffleBtn.classList.add('loading');
+  if (floatingShuffleBtn) floatingShuffleBtn.classList.add('loading');
+
   const mode = localStorage.getItem('shaktiman_wallpaper_mode') || 'mixed';
 
-  if (mode === 'aurora') {
-    applyAuroraWallpaper();
-    return;
-  }
-
-  if (mode === 'custom') {
-    const customUrl = localStorage.getItem('shaktiman_custom_bg');
-    if (customUrl) {
-      applyCustomWallpaper(customUrl);
-    } else {
-      openCustomWpDialog();
-    }
-    return;
-  }
-
-  isFetchingWallpaper = true;
-  setShuffleLoadingState(true);
-
-  let targetMode = mode;
-  if (mode === 'mixed') {
-    const pool = ['cats', 'dogs', 'memes', 'memes'];
-    targetMode = pool[Math.floor(Math.random() * pool.length)];
-  }
-
   try {
-    if (targetMode === 'cats') {
+    if (mode === 'aurora') {
+      applyAuroraTheme();
+      return;
+    }
+    if (mode === 'custom') {
+      const customUrl = localStorage.getItem('shaktiman_custom_wallpaper_url') || '';
+      if (customUrl) {
+        await loadAndApplyImage(customUrl, '🖼️ Custom Image', 'Personal Wallpaper');
+        return;
+      }
+    }
+    if (mode === 'cats') {
       await fetchCatWallpaper();
-    } else if (targetMode === 'dogs') {
+    } else if (mode === 'dogs') {
       await fetchDogWallpaper();
-    } else if (targetMode === 'memes') {
+    } else if (mode === 'memes') {
       await fetchMemeWallpaper();
+    } else {
+      const pool = ['cats', 'dogs', 'memes'];
+      const chosen = pool[Math.floor(Math.random() * pool.length)];
+      if (chosen === 'cats') await fetchCatWallpaper();
+      else if (chosen === 'dogs') await fetchDogWallpaper();
+      else await fetchMemeWallpaper();
     }
   } catch (err) {
     applyFallbackWallpaper();
   } finally {
     isFetchingWallpaper = false;
-    setShuffleLoadingState(false);
+    if (captionShuffleBtn) captionShuffleBtn.classList.remove('loading');
+    if (floatingShuffleBtn) floatingShuffleBtn.classList.remove('loading');
   }
 }
 
 async function fetchCatWallpaper() {
   let imgUrl = '';
-  let title = 'Hilarious Cat Stare';
+  let title = 'Funny Cat Moment';
   try {
     const res = await fetch('https://cataas.com/cat?json=true');
     if (res.ok) {
       const data = await res.json();
-      if (data.url && data.url.startsWith('http')) {
+      if (data.url && (data.url.startsWith('http://') || data.url.startsWith('https://'))) {
         imgUrl = data.url;
       } else if (data.url && data.url.startsWith('/')) {
         imgUrl = 'https://cataas.com' + data.url;
@@ -378,82 +419,61 @@ function renderWallpaper(url, badge, title) {
   if (downloadWpBtn) downloadWpBtn.href = url;
 }
 
-function applyAuroraWallpaper() {
+function applyAuroraTheme() {
   const bgFixedLayer = document.getElementById('bg-fixed-layer');
   const bgVignetteOverlay = document.getElementById('bgVignetteOverlay');
   const orbs = document.querySelectorAll('.aurora-orb');
 
-  bgFixedLayer.style.backgroundImage = '';
+  bgFixedLayer.style.backgroundImage = 'none';
   if (bgVignetteOverlay) bgVignetteOverlay.style.display = 'none';
   orbs.forEach(orb => orb.style.display = 'block');
 
-  if (captionBadge) captionBadge.textContent = '✦ Aurora Mode';
-  if (captionTitle) captionTitle.textContent = 'Dynamic Aurora mesh gradient';
+  if (captionBadge) captionBadge.textContent = '✨ Aurora Gradient';
+  if (captionTitle) captionTitle.textContent = 'Multi-color Mesh Waves';
   if (downloadWpBtn) downloadWpBtn.href = '#';
-}
-
-function applyCustomWallpaper(url) {
-  loadAndApplyImage(url, '🖼 Custom Backdrop', 'User custom image');
 }
 
 function applyFallbackWallpaper() {
   const fallbackUrl = 'https://images.dog.ceo/breeds/shiba/shiba-13.jpg';
-  renderWallpaper(fallbackUrl, '🐶 Funny Dog', 'Classic Shiba Doge');
+  renderWallpaper(fallbackUrl, '🐶 Cute Shiba', 'Much Wow, Very Shaktiman');
 }
 
-if (floatingShuffleBtn) {
-  floatingShuffleBtn.addEventListener('click', () => {
-    fetchNextWallpaper();
-  });
-}
+themeMenuBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  themeMenu.classList.toggle('open');
+});
 
-if (captionShuffleBtn) {
-  captionShuffleBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    fetchNextWallpaper();
-  });
-}
-
-if (captionToggleBtn && wallpaperCaptionPill) {
-  captionToggleBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    wallpaperCaptionPill.classList.toggle('collapsed');
-  });
-}
+document.addEventListener('click', (e) => {
+  if (!themeMenu.contains(e.target) && e.target !== themeMenuBtn) {
+    themeMenu.classList.remove('open');
+  }
+  if (shieldPopover && !shieldPopover.contains(e.target) && !shieldBtn.contains(e.target)) {
+    shieldPopover.classList.remove('active');
+  }
+});
 
 function renderFavorites() {
   tilesGrid.innerHTML = FAVORITES.map(fav => `
-    <div class="tile" data-url="${fav.url}">
-      <div class="tile-icon">${fav.glyph}</div>
+    <div class="tile-card" onclick="navigateTo('${fav.url}')">
+      <div class="tile-glyph">${fav.glyph}</div>
       <div class="tile-title">${fav.title}</div>
     </div>
   `).join('');
-
-  tilesGrid.querySelectorAll('.tile').forEach(el => {
-    el.addEventListener('click', () => {
-      const targetUrl = el.getAttribute('data-url');
-      navigateTo(targetUrl);
-    });
-  });
 }
 
 function parseInputUrl(input) {
   const trimmed = input.trim();
-  if (!trimmed) return '';
+  if (!trimmed) return null;
 
   if (trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('file://')) {
     return trimmed;
   }
 
   const domainRegex = /^([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(:\d+)?(\/.*)?$/;
-  const localhostRegex = /^localhost(:\d+)?(\/.*)?$/;
-  const ipRegex = /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(:\d+)?(\/.*)?$/;
-
-  if (localhostRegex.test(trimmed) || ipRegex.test(trimmed)) {
-    return 'http://' + trimmed;
-  }
-
   if (domainRegex.test(trimmed)) {
+    if (trimmed.startsWith('localhost') || trimmed.startsWith('127.0.0.1')) {
+      return 'http://' + trimmed;
+    }
     return 'https://' + trimmed;
   }
 
@@ -473,16 +493,17 @@ function updateOmniboxIcon(url) {
 
   if (url.startsWith('https://')) {
     omniboxIcon.innerHTML = `
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
         <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
       </svg>
     `;
   } else {
     omniboxIcon.innerHTML = `
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-        <path d="M7 11V7a5 5 0 0 1 9.9-1"></path>
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="8" x2="12" y2="12"></line>
+        <line x1="12" y1="16" x2="12.01" y2="16"></line>
       </svg>
     `;
   }
@@ -499,7 +520,8 @@ function createTab(initialUrl = null) {
     canGoBack: false,
     canGoForward: false,
     blockedTrackers: [],
-    webContentsId: null
+    webContentsId: null,
+    isSplit: false
   };
 
   tabs.push(tab);
@@ -509,6 +531,7 @@ function createTab(initialUrl = null) {
   webview.className = 'webview-element';
   webview.setAttribute('allowpopups', 'true');
   webview.setAttribute('webpreferences', 'contextIsolation=false');
+  webview.setAttribute('preload', PRELOAD_SCRIPT);
 
   viewContainer.appendChild(webview);
 
@@ -564,6 +587,7 @@ function setupWebviewEvents(tab, webview) {
     tab.blockedTrackers = [];
     if (tab.id === activeTabId) {
       updateNavState(tab);
+      updateShieldPopover();
     }
   });
 
@@ -594,7 +618,7 @@ function updateNavState(tab) {
     omniboxClear.classList.add('show');
     startPage.classList.remove('active');
     const wv = document.getElementById(`wv-${tab.id}`);
-    if (wv) wv.classList.add('active');
+    if (wv && !tab.isSplit) wv.classList.add('active');
   } else {
     omnibox.value = '';
     omniboxClear.classList.remove('show');
@@ -618,6 +642,15 @@ function switchTab(tabId) {
     wv.classList.remove('active');
   });
 
+  document.querySelectorAll('.split-wrapper').forEach(sw => {
+    sw.style.display = 'none';
+  });
+
+  if (tab.isSplit) {
+    const sw = document.getElementById(`split-wrap-${tab.id}`);
+    if (sw) sw.style.display = 'flex';
+  }
+
   updateNavState(tab);
   renderTabs();
 }
@@ -638,6 +671,9 @@ function closeTab(tabId) {
 
   const targetIdx = tabs.findIndex(t => t.id === tabId);
   if (targetIdx === -1) return;
+
+  const splitWrap = document.getElementById(`split-wrap-${tabId}`);
+  if (splitWrap) splitWrap.remove();
 
   const wv = document.getElementById(`wv-${tabId}`);
   if (wv) wv.remove();
@@ -697,7 +733,7 @@ function navigateTo(rawInput) {
   const wv = document.getElementById(`wv-${tab.id}`);
   if (wv) {
     wv.src = parsed;
-    wv.classList.add('active');
+    if (!tab.isSplit) wv.classList.add('active');
   }
 
   startPage.classList.remove('active');
@@ -766,8 +802,7 @@ reloadBtn.addEventListener('click', () => {
   if (!tab) return;
   const wv = document.getElementById(`wv-${tab.id}`);
   if (wv) {
-    if (tab.isLoading) wv.stop();
-    else wv.reload();
+    wv.reload();
   }
 });
 
@@ -806,13 +841,387 @@ fireBtn.addEventListener('click', async () => {
   }
 });
 
+function updateShieldPopover() {
+  const tab = tabs.find(t => t.id === activeTabId);
+  if (!tab) return;
+  let host = 'Local Start Page';
+  try {
+    if (tab.url && tab.url.startsWith('http')) {
+      host = new URL(tab.url).hostname;
+    }
+  } catch (e) {}
+
+  shieldSiteHost.textContent = host;
+  const isShieldDisabled = localStorage.getItem('shaktiman_shield_disabled_' + host) === 'true';
+  shieldToggleSwitch.checked = !isShieldDisabled;
+  shieldStatusLabel.textContent = !isShieldDisabled ? 'PROTECTION ACTIVE' : 'SHIELDS PAUSED';
+  shieldStatusLabel.style.color = !isShieldDisabled ? '#10b981' : '#f87171';
+  shieldStatNumber.textContent = tab.blockedTrackers.length;
+
+  if (tab.blockedTrackers.length === 0) {
+    shieldBlockedList.innerHTML = '<div class="shield-empty-msg">No trackers detected yet. Clean session!</div>';
+  } else {
+    shieldBlockedList.innerHTML = tab.blockedTrackers.map(url => {
+      let d = url;
+      try { d = new URL(url).hostname; } catch (e) {}
+      return `<div class="shield-blocked-item" title="${url}">${d}</div>`;
+    }).join('');
+  }
+}
+
+shieldBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  updateShieldPopover();
+  shieldPopover.classList.toggle('active');
+});
+
+shieldToggleSwitch.addEventListener('change', async () => {
+  const tab = tabs.find(t => t.id === activeTabId);
+  if (!tab) return;
+  let host = '';
+  try {
+    host = new URL(tab.url).hostname;
+  } catch (e) {}
+  if (!host) return;
+
+  const enabled = shieldToggleSwitch.checked;
+  if (!enabled) {
+    localStorage.setItem('shaktiman_shield_disabled_' + host, 'true');
+  } else {
+    localStorage.removeItem('shaktiman_shield_disabled_' + host);
+  }
+  await ipcRenderer.invoke('toggle-shield', { host, enabled });
+  updateShieldPopover();
+  showToast(enabled ? `⚡ Shields active for ${host}` : `⚠️ Shields paused for ${host}`);
+});
+
+shieldResetBtn.addEventListener('click', () => {
+  const tab = tabs.find(t => t.id === activeTabId);
+  if (tab) {
+    tab.blockedTrackers = [];
+    trackerCountText.textContent = '0';
+    updateShieldPopover();
+    const wv = document.getElementById(`wv-${tab.id}`);
+    if (wv) wv.reload();
+  }
+});
+
 ipcRenderer.on('tracker-blocked', (event, data) => {
   const matchingTab = tabs.find(t => t.webContentsId === data.webContentsId) || tabs.find(t => t.id === activeTabId);
   if (matchingTab) {
     matchingTab.blockedTrackers.push(data.url);
     if (matchingTab.id === activeTabId) {
       trackerCountText.textContent = matchingTab.blockedTrackers.length;
+      if (shieldPopover.classList.contains('active')) {
+        updateShieldPopover();
+      }
     }
+  }
+});
+
+function toggleSplitScreen() {
+  const tab = tabs.find(t => t.id === activeTabId);
+  if (!tab) return;
+
+  let splitWrapper = document.getElementById(`split-wrap-${tab.id}`);
+  const primaryWv = document.getElementById(`wv-${tab.id}`);
+
+  if (tab.isSplit) {
+    tab.isSplit = false;
+    if (splitWrapper) {
+      primaryWv.classList.remove('split-child');
+      viewContainer.appendChild(primaryWv);
+      splitWrapper.remove();
+      primaryWv.classList.add('active');
+    }
+    showToast('Split-Screen View Closed');
+    return;
+  }
+
+  tab.isSplit = true;
+  splitWrapper = document.createElement('div');
+  splitWrapper.id = `split-wrap-${tab.id}`;
+  splitWrapper.className = 'split-wrapper active';
+
+  const leftPane = document.createElement('div');
+  leftPane.className = 'split-pane-left';
+  primaryWv.classList.add('split-child');
+  leftPane.appendChild(primaryWv);
+
+  const divider = document.createElement('div');
+  divider.className = 'split-divider';
+
+  let isDragging = false;
+  divider.addEventListener('mousedown', () => {
+    isDragging = true;
+    divider.classList.add('dragging');
+  });
+
+  window.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    const rect = splitWrapper.getBoundingClientRect();
+    const pct = ((e.clientX - rect.left) / rect.width) * 100;
+    if (pct > 20 && pct < 80) {
+      leftPane.style.width = pct + '%';
+      rightPane.style.width = (100 - pct) + '%';
+    }
+  });
+
+  window.addEventListener('mouseup', () => {
+    if (isDragging) {
+      isDragging = false;
+      divider.classList.remove('dragging');
+    }
+  });
+
+  const rightPane = document.createElement('div');
+  rightPane.className = 'split-pane-right';
+
+  const miniBar = document.createElement('div');
+  miniBar.className = 'split-mini-bar';
+  const miniInput = document.createElement('input');
+  miniInput.className = 'split-mini-input';
+  miniInput.placeholder = 'Secondary URL or search...';
+  miniInput.value = 'http://localhost:8000/';
+
+  const miniCloseBtn = document.createElement('button');
+  miniCloseBtn.className = 'nav-btn';
+  miniCloseBtn.innerHTML = '&times;';
+  miniCloseBtn.title = 'Close Split View';
+  miniCloseBtn.addEventListener('click', toggleSplitScreen);
+
+  miniBar.appendChild(miniInput);
+  miniBar.appendChild(miniCloseBtn);
+
+  const secondaryWv = document.createElement('webview');
+  secondaryWv.id = `wv-sec-${tab.id}`;
+  secondaryWv.setAttribute('allowpopups', 'true');
+  secondaryWv.setAttribute('webpreferences', 'contextIsolation=false');
+  secondaryWv.setAttribute('preload', PRELOAD_SCRIPT);
+  secondaryWv.src = 'http://localhost:8000/';
+
+  miniInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      secondaryWv.src = parseInputUrl(miniInput.value);
+    }
+  });
+
+  rightPane.appendChild(miniBar);
+  rightPane.appendChild(secondaryWv);
+
+  splitWrapper.appendChild(leftPane);
+  splitWrapper.appendChild(divider);
+  splitWrapper.appendChild(rightPane);
+
+  viewContainer.appendChild(splitWrapper);
+  showToast('Split-Screen Dual View Active (Cmd/Ctrl + \\ to toggle)');
+}
+
+splitBtn.addEventListener('click', toggleSplitScreen);
+
+pipBtn.addEventListener('click', async () => {
+  const tab = tabs.find(t => t.id === activeTabId);
+  if (!tab) return;
+  const wv = document.getElementById(`wv-${tab.id}`);
+  if (!wv) {
+    showToast('No active video on Start Page');
+    return;
+  }
+
+  const script = `(() => {
+    try {
+      const v = document.querySelector('video');
+      if (!v) return { ok: false, msg: 'No video element found on this page' };
+      if (document.pictureInPictureElement) {
+        document.exitPictureInPicture();
+        return { ok: true, msg: 'Exited Picture-in-Picture' };
+      } else {
+        v.requestPictureInPicture();
+        return { ok: true, msg: 'Floating Picture-in-Picture Activated!' };
+      }
+    } catch (err) {
+      return { ok: false, msg: err.message };
+    }
+  })()`;
+
+  try {
+    const res = await wv.executeJavaScript(script);
+    showToast(res.msg);
+  } catch (err) {
+    showToast('PiP error: ' + err.message);
+  }
+});
+
+screenshotBtn.addEventListener('click', async () => {
+  const tab = tabs.find(t => t.id === activeTabId);
+  if (!tab) return;
+  const wv = document.getElementById(`wv-${tab.id}`);
+  if (!wv || !tab.url || tab.url === 'about:blank') {
+    showToast('Cannot capture blank Start Page');
+    return;
+  }
+
+  showToast('📸 Capturing screenshot...');
+  try {
+    const image = await wv.capturePage();
+    const dataUrl = image.toDataURL();
+    const res = await ipcRenderer.invoke('save-screenshot', {
+      dataUrl,
+      filename: (tab.title || 'page').slice(0, 30)
+    });
+    if (res.success) {
+      showToast('📸 Screenshot saved to Downloads: ' + res.filename);
+    } else {
+      showToast('Screenshot save failed: ' + res.error);
+    }
+  } catch (err) {
+    showToast('Capture error: ' + err.message);
+  }
+});
+
+async function openReaderMode() {
+  const tab = tabs.find(t => t.id === activeTabId);
+  if (!tab) return;
+  const wv = document.getElementById(`wv-${tab.id}`);
+  if (!wv || !tab.url || tab.url === 'about:blank') {
+    showToast('Open an article or webpage first for Reader Mode');
+    return;
+  }
+
+  const script = `(() => {
+    const article = document.querySelector('article') || document.querySelector('main') || document.querySelector('.post-content') || document.body;
+    const title = document.querySelector('h1')?.innerText || document.title || 'Article';
+    const author = document.querySelector('[rel="author"], .byline, .author, meta[name="author"]')?.innerText || '';
+    const paragraphs = Array.from(article.querySelectorAll('p, h2, h3, blockquote, img')).map(el => {
+      if (el.tagName === 'IMG' && el.src) {
+        return '<img src="' + el.src + '" style="max-width:100%; border-radius:12px; margin:16px 0;">';
+      }
+      if (el.tagName.startsWith('H')) {
+        return '<' + el.tagName.toLowerCase() + '>' + el.innerText.trim() + '</' + el.tagName.toLowerCase() + '>';
+      }
+      if (el.tagName === 'BLOCKQUOTE') {
+        return '<blockquote>' + el.innerText.trim() + '</blockquote>';
+      }
+      const t = el.innerText.trim();
+      return t.length > 20 ? '<p>' + t + '</p>' : '';
+    }).filter(Boolean).join('');
+
+    return { title, author, content: paragraphs };
+  })()`;
+
+  try {
+    const data = await wv.executeJavaScript(script);
+    readerTitle.textContent = data.title;
+    readerByline.textContent = data.author ? `By ${data.author} • Shaktiman Reader Mode` : `Source: ${tab.url} • Shaktiman Reader Mode`;
+    readerBody.innerHTML = data.content || '<p>No structured article paragraphs could be extracted from this page.</p>';
+    readerOverlay.classList.add('active');
+  } catch (err) {
+    showToast('Reader Mode extraction failed: ' + err.message);
+  }
+}
+
+function closeReaderMode() {
+  readerOverlay.classList.remove('active');
+  if (window.speechSynthesis) {
+    window.speechSynthesis.cancel();
+  }
+  readerTtsBtn.innerHTML = '<span>🔊 Read Aloud</span>';
+}
+
+readerBtn.addEventListener('click', openReaderMode);
+readerCloseBtn.addEventListener('click', closeReaderMode);
+
+readerFontSizeUp.addEventListener('click', () => {
+  currentFontSize = Math.min(2.0, currentFontSize + 0.1);
+  readerBody.style.fontSize = currentFontSize + 'rem';
+});
+
+readerFontSizeDown.addEventListener('click', () => {
+  currentFontSize = Math.max(0.9, currentFontSize - 0.1);
+  readerBody.style.fontSize = currentFontSize + 'rem';
+});
+
+readerThemeLight.addEventListener('click', () => readerOverlay.setAttribute('data-reader-theme', 'light'));
+readerThemeSepia.addEventListener('click', () => readerOverlay.setAttribute('data-reader-theme', 'sepia'));
+readerThemeDark.addEventListener('click', () => readerOverlay.setAttribute('data-reader-theme', 'dark'));
+
+readerTtsBtn.addEventListener('click', () => {
+  if (!window.speechSynthesis) return;
+  if (window.speechSynthesis.speaking) {
+    if (window.speechSynthesis.paused) {
+      window.speechSynthesis.resume();
+      readerTtsBtn.innerHTML = '<span>⏸️ Pause</span>';
+    } else {
+      window.speechSynthesis.pause();
+      readerTtsBtn.innerHTML = '<span>▶️ Resume</span>';
+    }
+    return;
+  }
+
+  const textToRead = (readerTitle.textContent + '. ' + readerBody.innerText).slice(0, 15000);
+  currentTtsUtterance = new SpeechSynthesisUtterance(textToRead);
+  currentTtsUtterance.rate = 1.0;
+  currentTtsUtterance.onend = () => {
+    readerTtsBtn.innerHTML = '<span>🔊 Read Aloud</span>';
+  };
+  window.speechSynthesis.speak(currentTtsUtterance);
+  readerTtsBtn.innerHTML = '<span>⏸️ Pause</span>';
+});
+
+function toggleScratchpad() {
+  scratchpadDrawer.classList.toggle('open');
+  if (scratchpadDrawer.classList.contains('open')) {
+    const saved = localStorage.getItem('shaktiman_scratchpad') || '';
+    scratchpadTextarea.value = saved;
+    scratchpadTextarea.focus();
+  }
+}
+
+scratchpadBtn.addEventListener('click', toggleScratchpad);
+closeScratchpadBtn.addEventListener('click', toggleScratchpad);
+
+scratchpadTextarea.addEventListener('input', () => {
+  localStorage.setItem('shaktiman_scratchpad', scratchpadTextarea.value);
+  scratchpadSavedStatus.textContent = 'Saved at ' + new Date().toLocaleTimeString();
+});
+
+clipUrlBtn.addEventListener('click', () => {
+  const tab = tabs.find(t => t.id === activeTabId);
+  if (!tab || !tab.url) return;
+  const line = `\n- [${tab.title}](${tab.url})\n`;
+  scratchpadTextarea.value += line;
+  localStorage.setItem('shaktiman_scratchpad', scratchpadTextarea.value);
+  showToast('Page URL clipped to Scratchpad!');
+});
+
+clipSelectionBtn.addEventListener('click', async () => {
+  const tab = tabs.find(t => t.id === activeTabId);
+  if (!tab || !tab.webContentsId) return;
+  const ctx = await ipcRenderer.invoke('extract-page-context', tab.webContentsId);
+  if (ctx && ctx.selectedText) {
+    const quote = `\n> ${ctx.selectedText}\n— *${ctx.title}*\n`;
+    scratchpadTextarea.value += quote;
+    localStorage.setItem('shaktiman_scratchpad', scratchpadTextarea.value);
+    showToast('Page selection clipped to Scratchpad!');
+  } else {
+    showToast('No text selected on page to clip');
+  }
+});
+
+exportNotesBtn.addEventListener('click', () => {
+  const blob = new Blob([scratchpadTextarea.value], { type: 'text/markdown;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'shaktiman-notes.md';
+  a.click();
+  showToast('Exported shaktiman-notes.md');
+});
+
+clearNotesBtn.addEventListener('click', () => {
+  if (confirm('Clear all Scratchpad notes?')) {
+    scratchpadTextarea.value = '';
+    localStorage.removeItem('shaktiman_scratchpad');
+    showToast('Scratchpad cleared');
   }
 });
 
@@ -947,6 +1356,18 @@ window.addEventListener('keydown', (e) => {
   );
 
   if (e.key === 'Escape') {
+    if (readerOverlay && readerOverlay.classList.contains('active')) {
+      closeReaderMode();
+      return;
+    }
+    if (scratchpadDrawer && scratchpadDrawer.classList.contains('open')) {
+      toggleScratchpad();
+      return;
+    }
+    if (shieldPopover && shieldPopover.classList.contains('active')) {
+      shieldPopover.classList.remove('active');
+      return;
+    }
     if (paywallModal && paywallModal.classList.contains('active')) {
       if (getCredits() <= 0) {
         if (paywallCard) {
@@ -960,6 +1381,24 @@ window.addEventListener('keydown', (e) => {
         return;
       }
     }
+  }
+
+  if (isCmdOrCtrl && e.key === '\\') {
+    e.preventDefault();
+    toggleSplitScreen();
+    return;
+  }
+
+  if (isCmdOrCtrl && e.shiftKey && e.key.toLowerCase() === 'r') {
+    e.preventDefault();
+    openReaderMode();
+    return;
+  }
+
+  if (isCmdOrCtrl && e.shiftKey && e.key.toLowerCase() === 'n') {
+    e.preventDefault();
+    toggleScratchpad();
+    return;
   }
 
   if (isCmdOrCtrl && e.key.toLowerCase() === 't') {

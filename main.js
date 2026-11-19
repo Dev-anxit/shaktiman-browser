@@ -3,8 +3,12 @@ delete process.env.ELECTRON_RUN_AS_NODE;
 const { app, BrowserWindow, ipcMain, session } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const { ElectronBlocker } = require('@ghostery/adblocker-electron');
+const fetch = require('cross-fetch');
 
 let mainWindow = null;
+let blocker = null;
+const disabledShieldsHosts = new Set();
 
 const TRACKING_DOMAINS = [
   'doubleclick.net',
@@ -34,8 +38,46 @@ const TRACKING_DOMAINS = [
   'newrelic.com'
 ];
 
-function setupAdBlocker() {
+async function setupAdBlocker() {
+  try {
+    blocker = await ElectronBlocker.fromPrebuiltAdsAndTracking(fetch);
+    blocker.enableBlockingInSession(session.defaultSession);
+    blocker.on('request-blocked', (request) => {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('tracker-blocked', {
+          url: request.url
+        });
+      }
+    });
+  } catch (e) {}
+
+  try {
+    session.defaultSession.setWebRTCIPHandlingPolicy('disable_non_proxied_udp');
+  } catch (e) {}
+
+  session.defaultSession.webRequest.onBeforeSendHeaders((details, callback) => {
+    const headers = details.requestHeaders;
+    if (headers['Referer'] && details.referrer) {
+      try {
+        const reqOrigin = new URL(details.url).origin;
+        const refOrigin = new URL(details.referrer).origin;
+        if (reqOrigin !== refOrigin) {
+          headers['Referer'] = reqOrigin + '/';
+        }
+      } catch (e) {}
+    }
+    callback({ cancel: false, requestHeaders: headers });
+  });
+
   session.defaultSession.webRequest.onBeforeRequest({ urls: ['<all_urls>'] }, (details, callback) => {
+    try {
+      const host = new URL(details.url).hostname.toLowerCase();
+      if (disabledShieldsHosts.has(host)) {
+        callback({ cancel: false });
+        return;
+      }
+    } catch (e) {}
+
     const requestUrl = details.url.toLowerCase();
     const isTracker = TRACKING_DOMAINS.some(domain => requestUrl.includes(domain));
 
@@ -92,6 +134,34 @@ app.on('web-contents-created', (event, contents) => {
     }
     return { action: 'deny' };
   });
+});
+
+ipcMain.handle('get-preload-path', () => {
+  return path.join(__dirname, 'preload.js');
+});
+
+ipcMain.handle('toggle-shield', (event, { host, enabled }) => {
+  if (!host) return { success: false, enabled: true };
+  const h = host.toLowerCase();
+  if (enabled) {
+    disabledShieldsHosts.delete(h);
+  } else {
+    disabledShieldsHosts.add(h);
+  }
+  return { success: true, enabled: !disabledShieldsHosts.has(h) };
+});
+
+ipcMain.handle('save-screenshot', async (event, { dataUrl, filename }) => {
+  try {
+    const base64Data = dataUrl.replace(/^data:image\/png;base64,/, '');
+    const downloadsDir = app.getPath('downloads');
+    const safeName = (filename || 'shaktiman-screenshot').replace(/[^a-z0-9_-]/gi, '_').slice(0, 40) + '-' + Date.now() + '.png';
+    const filePath = path.join(downloadsDir, safeName);
+    fs.writeFileSync(filePath, base64Data, 'base64');
+    return { success: true, filePath, filename: safeName };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
 });
 
 ipcMain.handle('clear-all-data', async () => {

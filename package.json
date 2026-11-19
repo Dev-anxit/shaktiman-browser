@@ -12,7 +12,10 @@
   "scripts": {
     "start": "electron ."
   },
-  "dependencies": {},
+  "dependencies": {
+    "@ghostery/adblocker-electron": "^2.20.3",
+    "cross-fetch": "^4.1.0"
+  },
   "devDependencies": {
     "electron": "^45.4.1"
   }

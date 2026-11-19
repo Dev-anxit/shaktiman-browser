@@ -56,16 +56,79 @@
             </svg>
           </div>
           <input type="text" class="omnibox" id="omnibox" placeholder="Search with Shaktiman, live web, or type URL..." autocomplete="off">
+          <button class="omnibox-tool-btn" id="readerBtn" title="Distraction-Free Reader Mode (Cmd/Ctrl+Shift+R)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+            </svg>
+          </button>
           <button class="omnibox-clear" id="omniboxClear">&times;</button>
         </div>
 
         <div class="action-buttons">
-          <button class="shield-btn" id="shieldBtn" title="Trackers Blocked">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+          <button class="nav-btn" id="splitBtn" title="Split-Screen Dual View (Cmd/Ctrl+\)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="12" y1="3" x2="12" y2="21"></line>
             </svg>
-            <span id="trackerCountText">0</span>
           </button>
+
+          <button class="nav-btn" id="pipBtn" title="Picture-in-Picture Video Popout">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+              <rect x="12" y="9" width="8" height="6" rx="1" ry="1"></rect>
+            </svg>
+          </button>
+
+          <button class="nav-btn" id="screenshotBtn" title="Capture Screenshot to Downloads">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+              <circle cx="12" cy="13" r="4"></circle>
+            </svg>
+          </button>
+
+          <button class="nav-btn" id="scratchpadBtn" title="Quick Scratchpad & Vault (Cmd/Ctrl+Shift+N)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+            </svg>
+          </button>
+
+          <div class="shield-wrapper" id="shieldWrapper">
+            <button class="shield-btn" id="shieldBtn" title="Shaktiman Shields">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+              </svg>
+              <span id="trackerCountText">0</span>
+            </button>
+            <div class="shield-popover" id="shieldPopover">
+              <div class="shield-popover-header">
+                <div class="shield-brand-title">
+                  <span class="shield-bolt">⚡</span>
+                  <span>Shaktiman Shields</span>
+                </div>
+                <label class="shield-switch">
+                  <input type="checkbox" id="shieldToggleSwitch" checked>
+                  <span class="shield-slider"></span>
+                </label>
+              </div>
+              <div class="shield-site-info">
+                <span class="shield-site-host" id="shieldSiteHost">Current Site</span>
+                <span class="shield-status-label" id="shieldStatusLabel">PROTECTION ACTIVE</span>
+              </div>
+              <div class="shield-stats-card">
+                <div class="shield-stat-number" id="shieldStatNumber">0</div>
+                <div class="shield-stat-desc">Trackers, Ads & Scripts Blocked</div>
+              </div>
+              <div class="shield-blocked-list-title">BLOCKED DOMAINS ON THIS TAB:</div>
+              <div class="shield-blocked-list" id="shieldBlockedList">
+                <div class="shield-empty-msg">No trackers detected yet. Clean session!</div>
+              </div>
+              <button class="shield-reset-btn" id="shieldResetBtn">Clear Stats & Re-filter</button>
+            </div>
+          </div>
 
           <button class="fire-btn" id="fireBtn" title="Burn Session Data">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -270,6 +333,52 @@
       </div>
     </div>
   </div>
+
+  <div class="reader-overlay" id="readerOverlay" data-reader-theme="dark">
+    <div class="reader-container">
+      <div class="reader-toolbar">
+        <div class="reader-toolbar-left">
+          <button class="reader-tool-btn" id="readerFontSizeDown" title="Decrease font size">A-</button>
+          <button class="reader-tool-btn" id="readerFontSizeUp" title="Increase font size">A+</button>
+          <button class="reader-tool-btn" id="readerThemeLight">☀️ Light</button>
+          <button class="reader-tool-btn" id="readerThemeSepia">📜 Sepia</button>
+          <button class="reader-tool-btn" id="readerThemeDark">🌙 Dark</button>
+        </div>
+        <div class="reader-toolbar-right">
+          <button class="reader-tool-btn tts-btn" id="readerTtsBtn" title="Read aloud using speech synthesis">
+            <span>🔊 Read Aloud</span>
+          </button>
+          <button class="reader-tool-btn" id="readerCloseBtn" title="Close reader mode">&times;</button>
+        </div>
+      </div>
+      <div class="reader-content-wrap">
+        <h1 class="reader-title" id="readerTitle"></h1>
+        <div class="reader-byline" id="readerByline"></div>
+        <div class="reader-body" id="readerBody"></div>
+      </div>
+    </div>
+  </div>
+
+  <aside class="scratchpad-drawer" id="scratchpadDrawer">
+    <div class="scratchpad-header">
+      <div class="scratchpad-title-row">
+        <span>📝</span>
+        <span class="scratchpad-title">Quick Scratchpad & Vault</span>
+      </div>
+      <button class="nav-btn" id="closeScratchpadBtn">&times;</button>
+    </div>
+    <div class="scratchpad-quick-actions">
+      <button class="scratchpad-action-chip" id="clipUrlBtn">📋 Clip URL</button>
+      <button class="scratchpad-action-chip" id="clipSelectionBtn">✂️ Clip Selection</button>
+      <button class="scratchpad-action-chip" id="exportNotesBtn">💾 Export .md</button>
+      <button class="scratchpad-action-chip" id="clearNotesBtn">🗑️ Clear</button>
+    </div>
+    <textarea class="scratchpad-textarea" id="scratchpadTextarea" placeholder="Write thoughts, code snippets, or notes for this page... (Persists automatically)"></textarea>
+    <div class="scratchpad-footer">
+      <span id="scratchpadSavedStatus">All notes saved locally</span>
+      <span class="scratchpad-shortcut-hint">Cmd/Ctrl+Shift+N</span>
+    </div>
+  </aside>
 
   <div class="toast" id="toast">Session Burned: Cookies & Cache Cleared!</div>
 
