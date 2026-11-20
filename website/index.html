@@ -8,7 +8,7 @@
   <link rel="icon" type="image/png" href="assets/logo.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg: #09090b;
@@ -245,6 +245,11 @@
       border-color: var(--accent);
       color: var(--text);
     }
+    .chip.highlight {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(245, 158, 11, 0.08);
+    }
     .platforms-section {
       max-width: 1100px;
       margin: 64px auto 0;
@@ -341,6 +346,275 @@
       background: var(--text);
       color: var(--bg);
       border-color: var(--text);
+    }
+    .pricing-section {
+      max-width: 1100px;
+      margin: 80px auto 0;
+      padding: 0 24px;
+    }
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      margin-bottom: 32px;
+    }
+    .plan-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: all 0.2s;
+      cursor: pointer;
+      position: relative;
+    }
+    .plan-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-3px);
+    }
+    .plan-card.active {
+      border-color: var(--accent);
+      box-shadow: 0 0 24px var(--accent-glow);
+      background: #15151a;
+    }
+    .plan-tag {
+      position: absolute;
+      top: 14px;
+      right: 16px;
+      font-size: 0.68rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      padding: 2px 8px;
+      border-radius: 6px;
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--accent);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+    .plan-title {
+      font-size: 1.25rem;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+    .plan-price-wrap {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      margin: 16px 0;
+    }
+    .plan-price {
+      font-size: 2.2rem;
+      font-weight: 800;
+      font-family: var(--font-mono);
+      color: var(--text);
+    }
+    .plan-currency {
+      color: var(--accent);
+      font-size: 1.4rem;
+      margin-right: 2px;
+    }
+    .plan-usd {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    .plan-credits {
+      font-family: var(--font-mono);
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+    .plan-features {
+      list-style: none;
+      margin-bottom: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .plan-feature-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.86rem;
+      color: var(--text-muted);
+    }
+    .plan-select-btn {
+      width: 100%;
+      background: #1f1f26;
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 12px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .plan-card.active .plan-select-btn {
+      background: var(--accent);
+      color: #000;
+      border-color: var(--accent);
+    }
+    .upi-checkout-box {
+      background: linear-gradient(145deg, #121215 0%, #16161b 100%);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 36px;
+      box-shadow: 0 20px 48px rgba(0, 0, 0, 0.4);
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 36px;
+      align-items: center;
+    }
+    .qr-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: #ffffff;
+      padding: 16px;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+      text-align: center;
+    }
+    .qr-image {
+      width: 220px;
+      height: 220px;
+      display: block;
+      border-radius: 8px;
+    }
+    .qr-label {
+      margin-top: 10px;
+      font-size: 0.76rem;
+      font-weight: 700;
+      color: #09090b;
+      letter-spacing: 0.02em;
+    }
+    .upi-details-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .checkout-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      color: var(--accent-emerald);
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.74rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      width: fit-content;
+    }
+    .checkout-title {
+      font-size: 1.6rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+    .checkout-payee {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+    }
+    .payee-highlight {
+      color: var(--text);
+      font-weight: 700;
+    }
+    .upi-pill-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .upi-id-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #09090b;
+      border: 1px solid var(--border);
+      padding: 10px 16px;
+      border-radius: 12px;
+      gap: 12px;
+    }
+    .upi-id-text {
+      font-family: var(--font-mono);
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--accent);
+      word-break: break-all;
+    }
+    .copy-btn {
+      background: #1c1c21;
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .copy-btn:hover {
+      background: var(--text);
+      color: var(--bg);
+    }
+    .upi-actions-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .btn-upi-launch {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--accent);
+      color: #000;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-weight: 800;
+      font-size: 0.92rem;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .btn-upi-launch:hover {
+      background: var(--accent-hover);
+      transform: translateY(-1px);
+    }
+    .steps-card {
+      margin-top: 12px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .step-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 0.84rem;
+      color: var(--text-muted);
+    }
+    .step-num {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #000;
+      font-weight: 800;
+      font-size: 0.72rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 2px;
     }
     .features-section {
       max-width: 1100px;
@@ -449,6 +723,27 @@
       text-transform: uppercase;
       letter-spacing: 0.04em;
     }
+    .toast-msg {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--text);
+      color: var(--bg);
+      font-weight: 700;
+      font-size: 0.88rem;
+      padding: 10px 18px;
+      border-radius: 10px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      z-index: 100;
+      opacity: 0;
+      transform: translateY(10px);
+      pointer-events: none;
+      transition: all 0.25s ease;
+    }
+    .toast-msg.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
     .footer {
       margin-top: auto;
       border-top: 1px solid var(--border);
@@ -502,6 +797,19 @@
       border-color: var(--accent);
       color: var(--accent);
     }
+    @media (max-width: 860px) {
+      .upi-checkout-box {
+        grid-template-columns: 1fr;
+        justify-items: center;
+        text-align: center;
+      }
+      .checkout-badge {
+        margin: 0 auto;
+      }
+      .upi-actions-row {
+        justify-content: center;
+      }
+    }
     @media (max-width: 640px) {
       .hero {
         padding-top: 48px;
@@ -518,6 +826,7 @@
 </head>
 <body>
   <div class="ambient-glow"></div>
+  <div class="toast-msg" id="toastMsg">Copied to clipboard!</div>
 
   <nav class="nav">
     <div class="nav-inner">
@@ -528,6 +837,7 @@
       </a>
       <div class="nav-links">
         <a href="#platforms" class="nav-link">Platforms</a>
+        <a href="#pricing" class="nav-link">Top Up Credits</a>
         <a href="#features" class="nav-link">Features</a>
         <a href="https://github.com/Dev-anxit/shaktiman-browser" target="_blank" class="nav-link">Source</a>
         <a href="https://ankit-portfolio-ten-tawny.vercel.app/" target="_blank" class="nav-cta">Architect</a>
@@ -570,6 +880,7 @@
         <a href="#platforms" class="chip">🍎 macOS Apple Silicon</a>
         <a href="#platforms" class="chip">🍏 macOS Intel x64</a>
         <a href="#platforms" class="chip">🪟 Windows 64-bit</a>
+        <a href="#pricing" class="chip highlight">⚡ Instant UPI Recharge</a>
       </div>
     </section>
 
@@ -632,6 +943,123 @@
           <a id="btnWin" href="https://github.com/Dev-anxit/shaktiman-browser/releases/download/v1.0.0/Shaktiman-Browser-win-x64.exe" class="platform-btn">
             <span>Download .exe (x64)</span>
           </a>
+        </div>
+      </div>
+    </section>
+
+    <section class="pricing-section" id="pricing">
+      <div class="section-header">
+        <div class="section-eyebrow">Instant AI Recharge</div>
+        <h2 class="section-title">Fuel Shaktiman Autonomous Agent</h2>
+        <p style="color:var(--text-muted); max-width:620px; margin:10px auto 0; font-size:0.95rem;">
+          Select your credit tier, scan the live dynamic UPI QR code with GPay, PhonePe, or Paytm, and redeem instant credits in your browser.
+        </p>
+      </div>
+
+      <div class="pricing-grid">
+        <div class="plan-card" onclick="selectPlan(500, 99, '500 Credits Starter Pack', this)">
+          <div class="plan-title">Starter Energy</div>
+          <div class="plan-credits">⚡ 500 AI Credits</div>
+          <div class="plan-price-wrap">
+            <span class="plan-currency">₹</span>
+            <span class="plan-price">99</span>
+            <span class="plan-usd">/ $1.99</span>
+          </div>
+          <ul class="plan-features">
+            <li class="plan-feature-item">✓ 500 Autonomous Agent Calls</li>
+            <li class="plan-feature-item">✓ DOM Form Autofill & Extraction</li>
+            <li class="plan-feature-item">✓ 3-Bullet Tab Summaries</li>
+            <li class="plan-feature-item">✓ Never Expires</li>
+          </ul>
+          <button class="plan-select-btn" type="button">Select ₹99 Pack</button>
+        </div>
+
+        <div class="plan-card active" onclick="selectPlan(2500, 249, '2,500 Credits Power Pack', this)">
+          <div class="plan-tag">POPULAR</div>
+          <div class="plan-title">Power Student</div>
+          <div class="plan-credits">⚡ 2,500 AI Credits</div>
+          <div class="plan-price-wrap">
+            <span class="plan-currency">₹</span>
+            <span class="plan-price">249</span>
+            <span class="plan-usd">/ $4.99</span>
+          </div>
+          <ul class="plan-features">
+            <li class="plan-feature-item">✓ 2,500 Autonomous Agent Calls</li>
+            <li class="plan-feature-item">✓ Deep Lecture & Research PDF Chat</li>
+            <li class="plan-feature-item">✓ Navigation Workflow Tasks</li>
+            <li class="plan-feature-item">✓ High-Priority Groq LLM Speed</li>
+          </ul>
+          <button class="plan-select-btn" type="button">Select ₹249 Pack</button>
+        </div>
+
+        <div class="plan-card" onclick="selectPlan('Unlimited', 499, 'Unlimited Student Pro Pass', this)">
+          <div class="plan-tag" style="background:rgba(16,185,129,0.15); color:var(--accent-emerald); border-color:rgba(16,185,129,0.3);">BEST VALUE</div>
+          <div class="plan-title">Lifetime Pro Pass</div>
+          <div class="plan-credits" style="color:var(--accent-emerald);">⚡ Unlimited Credits</div>
+          <div class="plan-price-wrap">
+            <span class="plan-currency">₹</span>
+            <span class="plan-price">499</span>
+            <span class="plan-usd">/ $8.99</span>
+          </div>
+          <ul class="plan-features">
+            <li class="plan-feature-item">✓ Unlimited Autonomous Agent Calls</li>
+            <li class="plan-feature-item">✓ Permanent Pro Account Status</li>
+            <li class="plan-feature-item">✓ Shields Pro Network Blocking</li>
+            <li class="plan-feature-item">✓ Lifetime Feature Updates</li>
+          </ul>
+          <button class="plan-select-btn" type="button">Select ₹499 Pack</button>
+        </div>
+      </div>
+
+      <div class="upi-checkout-box">
+        <div class="qr-container">
+          <img id="upiQrImg" class="qr-image" src="https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=8&data=upi%3A%2F%2Fpay%3Fpa%3Danxit23%40axl%26pn%3DDevXanxit%26am%3D249%26cu%3DINR%26tn%3DShaktiman_AI_Credits" alt="UPI QR Code">
+          <div class="qr-label" id="qrAmountLabel">Scan to Pay ₹249</div>
+        </div>
+
+        <div class="upi-details-wrap">
+          <div class="checkout-badge" id="selectedPackBadge">Selected: 2,500 Credits Power Pack</div>
+          <div class="checkout-title" id="checkoutAmountDisplay">Amount: ₹249 INR</div>
+          <div class="checkout-payee">Payee: <span class="payee-highlight">DevXanxit (Ankit Kumar)</span></div>
+
+          <div class="upi-pill-group">
+            <div class="upi-id-row">
+              <div>
+                <div style="font-size:0.72rem; color:var(--text-subtle); text-transform:uppercase; font-weight:700;">Primary UPI ID</div>
+                <div class="upi-id-text">anxit23@axl</div>
+              </div>
+              <button class="copy-btn" onclick="copyUpi('anxit23@axl')">Copy UPI</button>
+            </div>
+
+            <div class="upi-id-row">
+              <div>
+                <div style="font-size:0.72rem; color:var(--text-subtle); text-transform:uppercase; font-weight:700;">Backup UPI ID</div>
+                <div class="upi-id-text">unknownuser6672-2@okaxis</div>
+              </div>
+              <button class="copy-btn" onclick="copyUpi('unknownuser6672-2@okaxis')">Copy UPI</button>
+            </div>
+          </div>
+
+          <div class="upi-actions-row">
+            <a id="upiDeepLinkBtn" href="upi://pay?pa=anxit23@axl&pn=DevXanxit&am=249&cu=INR&tn=Shaktiman_AI_Credits" class="btn-upi-launch">
+              <span>⚡ Pay with UPI App (GPay / PhonePe / Paytm)</span>
+            </a>
+          </div>
+
+          <div class="steps-card">
+            <div class="step-item">
+              <span class="step-num">1</span>
+              <span>Scan QR or pay the exact amount to <strong style="color:var(--text);">anxit23@axl</strong> in any UPI application.</span>
+            </div>
+            <div class="step-item">
+              <span class="step-num">2</span>
+              <span>Note the <strong>12-digit UPI UTR / Transaction ID</strong> from your payment success screen.</span>
+            </div>
+            <div class="step-item">
+              <span class="step-num">3</span>
+              <span>Open <strong>Shaktiman Browser</strong> &rarr; Click <strong>⚡ Top Up</strong> &rarr; Paste your Transaction ID or voucher to credit your account immediately.</span>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -716,6 +1144,58 @@
   </footer>
 
   <script>
+    let currentAmount = 249;
+    let currentUpi = 'anxit23@axl';
+
+    function selectPlan(credits, amount, planName, cardEl) {
+      document.querySelectorAll('.plan-card').forEach(c => c.classList.remove('active'));
+      if (cardEl) cardEl.classList.add('active');
+
+      currentAmount = amount;
+      const amountLabel = document.getElementById('checkoutAmountDisplay');
+      const badge = document.getElementById('selectedPackBadge');
+      const qrLabel = document.getElementById('qrAmountLabel');
+
+      if (amountLabel) amountLabel.textContent = `Amount: ₹${amount} INR`;
+      if (badge) badge.textContent = `Selected: ${planName}`;
+      if (qrLabel) qrLabel.textContent = `Scan to Pay ₹${amount}`;
+
+      updateQr();
+    }
+
+    function updateQr() {
+      const upiUrl = `upi://pay?pa=${encodeURIComponent(currentUpi)}&pn=DevXanxit&am=${currentAmount}&cu=INR&tn=Shaktiman_AI_Credits`;
+      const qrImg = document.getElementById('upiQrImg');
+      const deepLink = document.getElementById('upiDeepLinkBtn');
+
+      if (qrImg) {
+        qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=8&data=${encodeURIComponent(upiUrl)}`;
+      }
+      if (deepLink) {
+        deepLink.href = upiUrl;
+      }
+    }
+
+    function copyUpi(upiId) {
+      currentUpi = upiId;
+      navigator.clipboard.writeText(upiId).then(() => {
+        showToast(`Copied UPI ID: ${upiId}`);
+        updateQr();
+      }).catch(() => {
+        showToast(`UPI ID: ${upiId}`);
+      });
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toastMsg');
+      if (!t) return;
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => {
+        t.classList.remove('show');
+      }, 2500);
+    }
+
     function detectSystem() {
       const ua = navigator.userAgent || '';
       const platform = navigator.platform || '';
