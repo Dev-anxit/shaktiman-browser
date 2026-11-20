@@ -12,6 +12,7 @@
 
 - **Creator & Lead Architect:** DevXanxit (Ankit Kumar)
 - **Copyright:** © 2026 DevXanxit. All rights reserved.
+- **Official Website:** [https://shaktimanbrowser.vercel.app](https://shaktimanbrowser.vercel.app)
 - **Official Portfolio:** [https://ankit-portfolio-ten-tawny.vercel.app/](https://ankit-portfolio-ten-tawny.vercel.app/)
 
 ## Architectural Overview

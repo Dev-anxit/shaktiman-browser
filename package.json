@@ -5,7 +5,7 @@
   "main": "main.js",
   "author": "DevXanxit",
   "copyright": "Copyright © 2026 DevXanxit. All Rights Reserved.",
-  "homepage": "https://ankit-portfolio-ten-tawny.vercel.app/",
+  "homepage": "https://shaktimanbrowser.vercel.app",
   "scripts": {
     "start": "env -u ELECTRON_RUN_AS_NODE electron .",
     "pack": "electron-builder --dir",
