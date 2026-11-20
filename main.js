@@ -439,7 +439,36 @@ ipcMain.handle('extract-page-context', async (event, webContentsId) => {
   }
 });
 
+let backendProcess = null;
+
+function startBackend() {
+  const isPackaged = app.isPackaged;
+  const binName = process.platform === 'win32' ? 'shaktiman-engine.exe' : 'shaktiman-engine';
+  const binPath = isPackaged
+    ? path.join(process.resourcesPath, 'bin', binName)
+    : path.join(__dirname, 'resources', 'bin', binName);
+
+  if (fs.existsSync(binPath)) {
+    const { spawn } = require('child_process');
+    backendProcess = spawn(binPath, [], {
+      detached: false,
+      stdio: 'ignore'
+    });
+    backendProcess.unref();
+  }
+}
+
+function stopBackend() {
+  if (backendProcess) {
+    try {
+      backendProcess.kill();
+    } catch (e) {}
+    backendProcess = null;
+  }
+}
+
 app.whenReady().then(() => {
+  startBackend();
   createWindow();
 
   app.on('activate', () => {
@@ -447,6 +476,10 @@ app.whenReady().then(() => {
       createWindow();
     }
   });
+});
+
+app.on('will-quit', () => {
+  stopBackend();
 });
 
 app.on('window-all-closed', () => {

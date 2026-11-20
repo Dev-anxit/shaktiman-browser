@@ -1,25 +1,59 @@
 {
   "name": "shaktiman-browser",
-  "version": "2.0.0",
+  "version": "1.0.0",
   "description": "Shaktiman Browser - High-dynamic AI desktop browser and private search engine built by DevXanxit",
   "main": "main.js",
-  "author": "DevXanxit <https://ankit-portfolio-ten-tawny.vercel.app/>",
+  "author": "DevXanxit",
   "copyright": "Copyright © 2026 DevXanxit. All Rights Reserved.",
   "homepage": "https://ankit-portfolio-ten-tawny.vercel.app/",
+  "scripts": {
+    "start": "env -u ELECTRON_RUN_AS_NODE electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder",
+    "dist:mac": "electron-builder --mac",
+    "dist:win": "electron-builder --win"
+  },
   "build": {
     "appId": "com.devxanxit.shaktimanbrowser",
     "productName": "Shaktiman Browser",
-    "copyright": "Copyright © 2026 DevXanxit. All Rights Reserved.",
+    "artifactName": "Shaktiman-Browser-${os}-${arch}.${ext}",
+    "extraResources": [
+      {
+        "from": "resources/bin",
+        "to": "bin"
+      }
+    ],
     "mac": {
-      "category": "public.app-category.productivity",
       "target": [
-        "dmg",
-        "zip"
-      ]
-    }
-  },
-  "scripts": {
-    "start": "env -u ELECTRON_RUN_AS_NODE electron ."
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        }
+      ],
+      "icon": "assets/icon.icns",
+      "category": "public.app-category.productivity"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "assets/icon.png"
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "DevXanxit",
+        "repo": "shaktiman-browser"
+      }
+    ]
   },
   "dependencies": {
     "@ghostery/adblocker-electron": "^2.20.3",
@@ -27,6 +61,7 @@
     "cross-fetch": "^4.1.0"
   },
   "devDependencies": {
-    "electron": "^45.4.1"
+    "electron": "^45.4.1",
+    "electron-builder": "^25.1.8"
   }
 }
