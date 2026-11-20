@@ -51,7 +51,7 @@ def crawl(seed_urls, allowed_domains, max_pages=25, crawl_delay=0.3, store_path=
             visited.add(clean_seed)
 
     session = requests.Session()
-    session.headers.update({"User-Agent": "ShaktimanBrowser/1.0 (+https://ankit-portfolio-ten-tawny.vercel.app/; Built by DevXanxit)"})
+    session.headers.update({"User-Agent": "ShaktimanBrowser/1.0 (+https://shaktimanbrowser.vercel.app)"})
 
     crawled_count = 0
 

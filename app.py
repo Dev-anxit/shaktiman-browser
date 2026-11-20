@@ -250,7 +250,7 @@ async def lifespan(app: FastAPI):
         seed_sample_data()
     yield
 
-app = FastAPI(title="Shaktiman Browser API by DevXanxit", contact={"name": "DevXanxit", "url": "https://ankit-portfolio-ten-tawny.vercel.app/"}, lifespan=lifespan)
+app = FastAPI(title="Shaktiman Browser API", contact={"name": "Shaktiman Browser", "url": "https://shaktimanbrowser.vercel.app"}, lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,

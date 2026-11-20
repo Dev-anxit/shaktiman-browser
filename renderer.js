@@ -261,16 +261,11 @@ function updateAuthUI(user) {
     if (signInHeaderBtn) signInHeaderBtn.classList.add('hidden');
     if (profileHeaderPill) profileHeaderPill.classList.remove('hidden');
     if (profileAvatar) {
-      if (user.avatar_url) {
-        profileAvatar.innerHTML = `<img src="${user.avatar_url}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
-      } else {
-        const initial = (user.name || user.email || 'U').charAt(0).toUpperCase();
-        profileAvatar.textContent = initial;
-      }
+      profileAvatar.innerHTML = '<span style="font-size:0.85rem;">🔒</span>';
     }
     if (profileEmailBadge) {
-      profileEmailBadge.textContent = user.email;
-      profileEmailBadge.title = user.email;
+      profileEmailBadge.textContent = 'Anonymous Mode';
+      profileEmailBadge.title = 'Identity Protected';
     }
     currentCredits = typeof user.credits === 'number' ? user.credits : 100;
     updateCreditUI(currentCredits);
@@ -713,15 +708,10 @@ function openPaywallModal() {
   if (paywallModal) {
     paywallModal.classList.add('active');
     if (paywallUserEmailBadge) {
-      const email = currentUser ? currentUser.email : '0';
-      paywallUserEmailBadge.textContent = `${email.toUpperCase()} — 0 / 100 CREDITS REMAINING`;
+      paywallUserEmailBadge.textContent = 'ACCOUNT STATUS — 0 / 100 CREDITS REMAINING';
     }
     if (paywallAccountText) {
-      if (currentUser) {
-        paywallAccountText.textContent = `Account (${currentUser.email}) has reached 0 credits. Recharge now to continue autonomous web searches and AI assistance.`;
-      } else {
-        paywallAccountText.textContent = `Your Shaktiman AI credit balance is 0. Sign in or top up to continue enjoying autonomous searches and AI features.`;
-      }
+      paywallAccountText.textContent = 'Your Shaktiman AI credit balance is 0. Top up your account to continue enjoying autonomous searches, DOM automation, and tab summaries.';
     }
     if (passCodeInput) {
       passCodeInput.value = '';
@@ -741,7 +731,7 @@ function closePaywallModal() {
 }
 
 function openPaymentLink() {
-  window.open('https://ankit-portfolio-ten-tawny.vercel.app/', '_blank');
+  window.open('https://shaktimanbrowser.vercel.app#pricing', '_blank');
 }
 
 function handleBuyCredits() {
