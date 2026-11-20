@@ -921,6 +921,18 @@ function renderFavorites() {
       <div class="tile-title">${fav.title}</div>
     </div>
   `).join('');
+
+  FAVORITES.forEach(fav => {
+    try {
+      const u = new URL(fav.url);
+      if (u.protocol === 'http:' || u.protocol === 'https:') {
+        const link = document.createElement('link');
+        link.rel = 'dns-prefetch';
+        link.href = u.origin;
+        document.head.appendChild(link);
+      }
+    } catch (e) {}
+  });
 }
 
 function parseInputUrl(input) {

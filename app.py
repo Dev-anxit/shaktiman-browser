@@ -1092,6 +1092,9 @@ def seed_api():
         "total_docs": count
     }
 
+SEARCH_CACHE = {}
+SEARCH_CACHE_TTL = 300.0
+
 @app.get("/api/search")
 def search_api(q: str = Query(default=""), source: str = Query(default="all"), limit: int = Query(default=50)):
     start_time = time.perf_counter()
@@ -1105,6 +1108,15 @@ def search_api(q: str = Query(default=""), source: str = Query(default="all"), l
             "results": []
         }
 
+    cache_key = f"{clean_q.lower()}:{source}:{limit}"
+    now = time.time()
+    if cache_key in SEARCH_CACHE:
+        cached = SEARCH_CACHE[cache_key]
+        if now - cached["timestamp"] < SEARCH_CACHE_TTL:
+            cached_res = dict(cached["data"])
+            cached_res["latency_ms"] = round((time.perf_counter() - start_time) * 1000, 2)
+            return cached_res
+
     results = []
     seen_urls = set()
 
@@ -1116,7 +1128,7 @@ def search_api(q: str = Query(default=""), source: str = Query(default="all"), l
 
     if source in ("all", "web"):
         try:
-            with DDGS() as ddgs:
+            with DDGS(timeout=3.5) as ddgs:
                 ddgs_items = list(ddgs.text(clean_q, max_results=10))
             for item in ddgs_items:
                 target_url = item.get("href", "")
@@ -1137,13 +1149,18 @@ def search_api(q: str = Query(default=""), source: str = Query(default="all"), l
             pass
 
     elapsed_ms = round((time.perf_counter() - start_time) * 1000, 2)
-    return {
+    response_payload = {
         "query": clean_q,
         "source": source,
         "latency_ms": elapsed_ms,
         "total_results": len(results),
         "results": results[:limit]
     }
+    SEARCH_CACHE[cache_key] = {
+        "timestamp": now,
+        "data": response_payload
+    }
+    return response_payload
 
 @app.post("/api/overview")
 def overview_endpoint(req: OverviewApiRequest):

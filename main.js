@@ -1,11 +1,20 @@
 delete process.env.ELECTRON_RUN_AS_NODE;
 
-const { app, BrowserWindow, ipcMain, session, safeStorage } = require('electron');
+const { app, BrowserWindow, ipcMain, session, safeStorage, Menu } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
 const { ElectronBlocker } = require('@ghostery/adblocker-electron');
 const fetch = require('cross-fetch');
+
+app.commandLine.appendSwitch('no-proxy-server');
+app.commandLine.appendSwitch('enable-quic');
+app.commandLine.appendSwitch('enable-features', 'NetworkServiceInProcess2,ParallelDownloading,BackForwardCache');
+app.commandLine.appendSwitch('ignore-gpu-blocklist');
+
+if (process.platform !== 'darwin') {
+  Menu.setApplicationMenu(null);
+}
 
 let mainWindow = null;
 let blocker = null;
@@ -95,7 +104,12 @@ const TRACKING_DOMAINS = [
 
 async function setupAdBlocker() {
   try {
-    blocker = await ElectronBlocker.fromPrebuiltAdsAndTracking(fetch);
+    const cachePath = path.join(app.getPath('userData'), 'adblocker-engine.bin');
+    blocker = await ElectronBlocker.fromPrebuiltAdsAndTracking(fetch, {
+      path: cachePath,
+      read: fs.promises.readFile,
+      write: fs.promises.writeFile
+    });
     blocker.enableBlockingInSession(session.defaultSession);
     blocker.on('request-blocked', (request) => {
       if (mainWindow && !mainWindow.isDestroyed()) {
@@ -104,7 +118,12 @@ async function setupAdBlocker() {
         });
       }
     });
-  } catch (e) {}
+  } catch (e) {
+    try {
+      blocker = await ElectronBlocker.fromPrebuiltAdsAndTracking(fetch);
+      blocker.enableBlockingInSession(session.defaultSession);
+    } catch (err) {}
+  }
 
   try {
     session.defaultSession.setWebRTCIPHandlingPolicy('disable_non_proxied_udp');

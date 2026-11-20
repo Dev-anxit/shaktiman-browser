@@ -42,54 +42,64 @@
   `;
 
   function injectCosmetics() {
-    if (!document.head) return;
-    if (document.getElementById('shaktiman-cosmetic-shield')) return;
+    if (!document.head || document.getElementById('shaktiman-cosmetic-shield')) return;
     const style = document.createElement('style');
     style.id = 'shaktiman-cosmetic-shield';
     style.textContent = COSMETIC_CSS;
     document.head.appendChild(style);
   }
 
-  function handleYouTubeAds() {
-    if (!window.location.hostname.includes('youtube.com')) return;
+  if (document.head) {
+    injectCosmetics();
+  } else {
+    document.addEventListener('DOMContentLoaded', injectCosmetics, { once: true });
+  }
 
-    const adContainer = document.querySelector('.ad-showing, .ad-interrupting');
-    const video = document.querySelector('video');
+  if (window.location.hostname.includes('youtube.com')) {
+    let ticking = false;
 
-    if (adContainer && video) {
-      video.muted = true;
-      if (!isNaN(video.duration) && video.duration > 0) {
-        video.currentTime = video.duration;
+    function handleYouTubeAds() {
+      ticking = false;
+      const adContainer = document.querySelector('.ad-showing, .ad-interrupting');
+      const video = document.querySelector('video');
+      if (adContainer && video) {
+        video.muted = true;
+        if (!isNaN(video.duration) && video.duration > 0) {
+          video.currentTime = video.duration;
+        }
+      }
+      const skipButtons = document.querySelectorAll(
+        '.ytp-skip-ad-button, .ytp-ad-skip-button-modern, .ytp-ad-skip-button, .ytp-ad-overlay-close-button, button.ytp-ad-skip-button'
+      );
+      skipButtons.forEach((btn) => {
+        if (btn && typeof btn.click === 'function') {
+          btn.click();
+        }
+      });
+    }
+
+    function scheduleAdCheck() {
+      if (!ticking) {
+        ticking = true;
+        requestAnimationFrame(handleYouTubeAds);
       }
     }
 
-    const skipButtons = document.querySelectorAll(
-      '.ytp-skip-ad-button, .ytp-ad-skip-button-modern, .ytp-ad-skip-button, .ytp-ad-overlay-close-button, button.ytp-ad-skip-button'
-    );
-    skipButtons.forEach((btn) => {
-      if (btn && typeof btn.click === 'function') {
-        btn.click();
+    function setupYouTubeObserver() {
+      const target = document.getElementById('movie_player') || document.querySelector('.html5-video-player');
+      if (target) {
+        handleYouTubeAds();
+        const obs = new MutationObserver(scheduleAdCheck);
+        obs.observe(target, { childList: true, attributes: true, attributeFilter: ['class'] });
+      } else {
+        setTimeout(setupYouTubeObserver, 500);
       }
-    });
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', setupYouTubeObserver, { once: true });
+    } else {
+      setupYouTubeObserver();
+    }
   }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-      injectCosmetics();
-      handleYouTubeAds();
-    });
-  } else {
-    injectCosmetics();
-    handleYouTubeAds();
-  }
-
-  const observer = new MutationObserver(() => {
-    injectCosmetics();
-    handleYouTubeAds();
-  });
-
-  observer.observe(document.documentElement || document.body, {
-    childList: true,
-    subtree: true
-  });
 })();
