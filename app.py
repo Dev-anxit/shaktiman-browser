@@ -3,11 +3,15 @@ import html
 import json
 import os
 import re
+import sqlite3
 import time
 import urllib.parse
 from contextlib import asynccontextmanager
+from datetime import datetime, timedelta, timezone
 from typing import Optional
-from fastapi import FastAPI, Query, HTTPException
+import bcrypt
+import jwt
+from fastapi import FastAPI, Query, HTTPException, Header
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
@@ -16,6 +20,37 @@ import requests
 from ddgs import DDGS
 import crawler
 from engine import SearchEngine
+
+DB_PATH = os.path.join("data", "users.db")
+JWT_SECRET = os.environ.get("JWT_SECRET", "devxanxit_shaktiman_jwt_secret_2026")
+JWT_ALGORITHM = "HS256"
+
+def get_db():
+    os.makedirs("data", exist_ok=True)
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+def init_users_db():
+    conn = get_db()
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            email TEXT UNIQUE NOT NULL,
+            name TEXT,
+            avatar_url TEXT,
+            provider TEXT,
+            password_hash TEXT,
+            credits INTEGER DEFAULT 100,
+            is_pro BOOLEAN DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)")
+    conn.commit()
+    conn.close()
+
+init_users_db()
 
 engine = SearchEngine()
 
@@ -209,6 +244,7 @@ def synthesize_overview(query: str, results: list) -> str:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    init_users_db()
     engine.load_index()
     if engine.doc_count == 0:
         seed_sample_data()
@@ -220,16 +256,37 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:8000",
-        "http://127.0.0.1:8000"
+        "http://127.0.0.1:8000",
+        "null"
     ],
-    allow_origin_regex=r"^file://.*",
+    allow_origin_regex=r"^(http://localhost:8000|http://127\.0\.0\.1:8000|file://.*)$",
     allow_credentials=True,
-    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 
 os.makedirs("assets", exist_ok=True)
 app.mount("/assets", StaticFiles(directory="assets"), name="assets")
+
+class SignupRequest(BaseModel):
+    email: str
+    password: str
+    name: Optional[str] = ""
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+class OAuthRequest(BaseModel):
+    provider: str
+    email: str
+    name: Optional[str] = ""
+    avatar_url: Optional[str] = ""
+
+class TopupRequest(BaseModel):
+    code: Optional[str] = ""
+    transaction_id: Optional[str] = ""
+    tier: Optional[str] = ""
 
 class CrawlRequest(BaseModel):
     seed_url: str
@@ -248,6 +305,32 @@ class ChatRequest(BaseModel):
     page_title: str = ""
     page_url: str = ""
     page_text: str = ""
+
+def create_access_token(data: dict):
+    expire = datetime.now(timezone.utc) + timedelta(days=30)
+    to_encode = data.copy()
+    to_encode.update({"exp": expire})
+    return jwt.encode(to_encode, JWT_SECRET, algorithm=JWT_ALGORITHM)
+
+def get_current_user(authorization: Optional[str] = Header(None)):
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Authentication required")
+    token = authorization.split(" ", 1)[1].strip()
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        raw_sub = payload.get("sub")
+        if not raw_sub:
+            raise HTTPException(status_code=401, detail="Invalid token")
+        user_id = int(raw_sub)
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+
+    conn = get_db()
+    row = conn.execute("SELECT id, email, name, avatar_url, provider, credits, is_pro, created_at FROM users WHERE id = ?", (user_id,)).fetchone()
+    conn.close()
+    if not row:
+        raise HTTPException(status_code=401, detail="User account not found")
+    return dict(row)
 
 HTML_PAGE = """<!DOCTYPE html>
 <html lang="en" data-theme="dark">
@@ -1139,6 +1222,161 @@ def ingest_api(req: IngestRequest):
 def stats_api():
     return {
         "total_docs": engine.doc_count
+    }
+
+@app.post("/api/auth/signup")
+def signup_endpoint(req: SignupRequest):
+    email = req.email.strip().lower()
+    if not email or "@" not in email:
+        raise HTTPException(status_code=400, detail="A valid email address is required")
+    if not req.password or len(req.password) < 4:
+        raise HTTPException(status_code=400, detail="Password must be at least 4 characters")
+
+    conn = get_db()
+    existing = conn.execute("SELECT id FROM users WHERE email = ?", (email,)).fetchone()
+    if existing:
+        conn.close()
+        raise HTTPException(status_code=409, detail="Email already registered — sign in to access your existing credit balance")
+
+    hashed = bcrypt.hashpw(req.password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+    name = req.name.strip() if req.name else email.split("@")[0].capitalize()
+
+    cursor = conn.execute(
+        "INSERT INTO users (email, name, avatar_url, provider, password_hash, credits, is_pro) VALUES (?, ?, ?, ?, ?, 100, 0)",
+        (email, name, "", "email", hashed)
+    )
+    conn.commit()
+    user_id = cursor.lastrowid
+    user_row = conn.execute("SELECT id, email, name, avatar_url, provider, credits, is_pro, created_at FROM users WHERE id = ?", (user_id,)).fetchone()
+    conn.close()
+
+    user_dict = dict(user_row)
+    token = create_access_token({"sub": str(user_id), "email": email})
+    return {"token": token, "user": user_dict}
+
+@app.post("/api/auth/login")
+def login_endpoint(req: LoginRequest):
+    email = req.email.strip().lower()
+    conn = get_db()
+    row = conn.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
+    conn.close()
+
+    if not row:
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+
+    user = dict(row)
+    pwd_hash = user.get("password_hash") or ""
+    if not pwd_hash:
+        raise HTTPException(status_code=401, detail="Account was created with OAuth. Please sign in with your OAuth provider.")
+
+    try:
+        valid = bcrypt.checkpw(req.password.encode("utf-8"), pwd_hash.encode("utf-8"))
+    except Exception:
+        valid = False
+
+    if not valid:
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+
+    token = create_access_token({"sub": str(user["id"]), "email": user["email"]})
+    user_data = {
+        "id": user["id"],
+        "email": user["email"],
+        "name": user["name"],
+        "avatar_url": user["avatar_url"],
+        "provider": user["provider"],
+        "credits": user["credits"],
+        "is_pro": bool(user["is_pro"]),
+        "created_at": user["created_at"]
+    }
+    return {"token": token, "user": user_data}
+
+@app.post("/api/auth/oauth")
+def oauth_endpoint(req: OAuthRequest):
+    email = req.email.strip().lower()
+    if not email or "@" not in email:
+        raise HTTPException(status_code=400, detail="Invalid OAuth profile email")
+
+    provider = req.provider.strip().lower() or "google"
+    name = req.name.strip() if req.name else email.split("@")[0].capitalize()
+    avatar = req.avatar_url.strip() if req.avatar_url else ""
+
+    conn = get_db()
+    existing = conn.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
+
+    if existing:
+        user_id = existing["id"]
+        if avatar and not existing["avatar_url"]:
+            conn.execute("UPDATE users SET avatar_url = ? WHERE id = ?", (avatar, user_id))
+            conn.commit()
+    else:
+        cursor = conn.execute(
+            "INSERT INTO users (email, name, avatar_url, provider, password_hash, credits, is_pro) VALUES (?, ?, ?, ?, '', 100, 0)",
+            (email, name, avatar, provider)
+        )
+        conn.commit()
+        user_id = cursor.lastrowid
+
+    row = conn.execute("SELECT id, email, name, avatar_url, provider, credits, is_pro, created_at FROM users WHERE id = ?", (user_id,)).fetchone()
+    conn.close()
+
+    user_dict = dict(row)
+    token = create_access_token({"sub": str(user_id), "email": email})
+    return {"token": token, "user": user_dict}
+
+@app.get("/api/auth/me")
+def me_endpoint(authorization: Optional[str] = Header(None)):
+    user = get_current_user(authorization)
+    return {"user": user}
+
+@app.post("/api/credits/consume")
+def consume_credit_endpoint(authorization: Optional[str] = Header(None)):
+    user = get_current_user(authorization)
+    if user["credits"] <= 0:
+        raise HTTPException(status_code=402, detail="Payment Required — Shaktiman AI credits exhausted. Please top up.")
+
+    conn = get_db()
+    conn.execute("UPDATE users SET credits = credits - 1 WHERE id = ?", (user["id"],))
+    conn.commit()
+    updated_credits = user["credits"] - 1
+    conn.close()
+
+    return {
+        "status": "ok",
+        "remaining_credits": updated_credits,
+        "email": user["email"]
+    }
+
+@app.post("/api/credits/topup")
+def topup_credits_endpoint(req: TopupRequest, authorization: Optional[str] = Header(None)):
+    user = get_current_user(authorization)
+    code = (req.code or "").strip().upper()
+    txn_id = (req.transaction_id or "").strip()
+
+    valid_vouchers = {
+        "DEVXANXIT500",
+        "SUPERCHARGE",
+        "SHAKTI-BOOST-500",
+        "DEVXANXIT-PRO-2026",
+        "SHAKTIMAN-PREVIEW-2026",
+        "PROMO100",
+        "SHAKTIMAN",
+        "DEVXANXIT"
+    }
+
+    is_valid = code in valid_vouchers or (len(txn_id) >= 6)
+    if not is_valid:
+        raise HTTPException(status_code=400, detail="Invalid voucher or transaction ID")
+
+    conn = get_db()
+    conn.execute("UPDATE users SET credits = credits + 500 WHERE id = ?", (user["id"],))
+    conn.commit()
+    updated = conn.execute("SELECT credits FROM users WHERE id = ?", (user["id"],)).fetchone()["credits"]
+    conn.close()
+
+    return {
+        "status": "ok",
+        "credits": updated,
+        "message": "500 Credits added successfully!"
     }
 
 if __name__ == "__main__":

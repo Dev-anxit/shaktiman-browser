@@ -64,6 +64,41 @@ const paywallModal = document.getElementById('paywallModal');
 const paywallCard = document.getElementById('paywallCard');
 const passCodeInput = document.getElementById('passCodeInput');
 const passFeedbackMsg = document.getElementById('passFeedbackMsg');
+const paywallUserEmailBadge = document.getElementById('paywallUserEmailBadge');
+const paywallAccountText = document.getElementById('paywallAccountText');
+
+const authHeaderWrapper = document.getElementById('authHeaderWrapper');
+const signInHeaderBtn = document.getElementById('signInHeaderBtn');
+const profileHeaderPill = document.getElementById('profileHeaderPill');
+const profileAvatar = document.getElementById('profileAvatar');
+const profileEmailBadge = document.getElementById('profileEmailBadge');
+const profileCreditsBadge = document.getElementById('profileCreditsBadge');
+const signOutHeaderBtn = document.getElementById('signOutHeaderBtn');
+
+const authModalOverlay = document.getElementById('authModalOverlay');
+const authModalCard = document.getElementById('authModalCard');
+const closeAuthModalBtn = document.getElementById('closeAuthModalBtn');
+const authTabSignInBtn = document.getElementById('authTabSignInBtn');
+const authTabSignUpBtn = document.getElementById('authTabSignUpBtn');
+const oauthGoogleBtn = document.getElementById('oauthGoogleBtn');
+const oauthGithubBtn = document.getElementById('oauthGithubBtn');
+const oauthAppleBtn = document.getElementById('oauthAppleBtn');
+const oauthMicrosoftBtn = document.getElementById('oauthMicrosoftBtn');
+
+const authEmailForm = document.getElementById('authEmailForm');
+const authNameFieldGroup = document.getElementById('authNameFieldGroup');
+const authNameInput = document.getElementById('authNameInput');
+const authEmailInput = document.getElementById('authEmailInput');
+const authPasswordInput = document.getElementById('authPasswordInput');
+const authErrorBanner = document.getElementById('authErrorBanner');
+const authSubmitActionBtn = document.getElementById('authSubmitActionBtn');
+
+const supabaseAccordionToggle = document.getElementById('supabaseAccordionToggle');
+const supabaseAccordionContent = document.getElementById('supabaseAccordionContent');
+const accordionArrow = document.getElementById('accordionArrow');
+const supabaseUrlInput = document.getElementById('supabaseUrlInput');
+const supabaseKeyInput = document.getElementById('supabaseKeyInput');
+const saveSupabaseSettingsBtn = document.getElementById('saveSupabaseSettingsBtn');
 
 const readerOverlay = document.getElementById('readerOverlay');
 const readerTitle = document.getElementById('readerTitle');
@@ -89,15 +124,15 @@ const scratchpadSavedStatus = document.getElementById('scratchpadSavedStatus');
 let currentFontSize = 1.15;
 let currentTtsUtterance = null;
 
+const API_BASE = 'http://127.0.0.1:8000';
+let authToken = localStorage.getItem('shaktiman_token') || '';
+let currentUser = null;
+let currentAuthMode = 'signin';
+
 async function initSecurityAndCredits() {
   try {
     if (api.getPreloadPath) {
       preloadPath = await api.getPreloadPath();
-    }
-    if (api.getCredits) {
-      const res = await api.getCredits();
-      currentCredits = res.balance;
-      updateCreditUI(currentCredits);
     }
   } catch (err) {}
 }
@@ -113,6 +148,9 @@ function updateCreditUI(credits) {
   if (drawerCreditMeter) {
     drawerCreditMeter.textContent = `${credits} / 100 Credits Remaining`;
   }
+  if (profileCreditsBadge) {
+    profileCreditsBadge.textContent = `⚡ ${credits} Credits`;
+  }
 
   if (aiToggleBtn) {
     if (credits <= 0) {
@@ -125,19 +163,310 @@ function updateCreditUI(credits) {
   }
 }
 
-async function checkAndDeductCredit() {
-  try {
-    if (api.consumeCredit) {
-      const res = await api.consumeCredit();
-      if (!res.success) {
-        openPaywallModal();
-        return false;
+function updateAuthUI(user) {
+  currentUser = user;
+  if (user) {
+    if (signInHeaderBtn) signInHeaderBtn.classList.add('hidden');
+    if (profileHeaderPill) profileHeaderPill.classList.remove('hidden');
+    if (profileAvatar) {
+      if (user.avatar_url) {
+        profileAvatar.innerHTML = `<img src="${user.avatar_url}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+      } else {
+        const initial = (user.name || user.email || 'U').charAt(0).toUpperCase();
+        profileAvatar.textContent = initial;
       }
-      currentCredits = res.balance;
+    }
+    if (profileEmailBadge) {
+      profileEmailBadge.textContent = user.email;
+      profileEmailBadge.title = user.email;
+    }
+    currentCredits = user.credits;
+    updateCreditUI(currentCredits);
+  } else {
+    if (signInHeaderBtn) signInHeaderBtn.classList.remove('hidden');
+    if (profileHeaderPill) profileHeaderPill.classList.add('hidden');
+    currentCredits = 0;
+    updateCreditUI(0);
+  }
+}
+
+async function checkAuthStatus() {
+  if (!authToken) {
+    updateAuthUI(null);
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/api/auth/me`, {
+      headers: { 'Authorization': `Bearer ${authToken}` }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      localStorage.setItem('shaktiman_user', JSON.stringify(data.user));
+      updateAuthUI(data.user);
+      return;
+    }
+  } catch (err) {}
+
+  const cached = localStorage.getItem('shaktiman_user');
+  if (cached) {
+    try {
+      const user = JSON.parse(cached);
+      updateAuthUI(user);
+      return;
+    } catch (e) {}
+  }
+  handleSignOut();
+}
+
+function openAuthModal(mode = 'signin') {
+  setAuthMode(mode);
+  if (authErrorBanner) {
+    authErrorBanner.textContent = '';
+    authErrorBanner.classList.add('hidden');
+  }
+  if (authModalOverlay) {
+    authModalOverlay.classList.add('active');
+    setTimeout(() => {
+      if (authEmailInput) authEmailInput.focus();
+    }, 100);
+  }
+}
+
+function closeAuthModal() {
+  if (authModalOverlay) {
+    authModalOverlay.classList.remove('active');
+  }
+}
+
+function setAuthMode(mode) {
+  currentAuthMode = mode;
+  if (authTabSignInBtn && authTabSignUpBtn) {
+    if (mode === 'signup') {
+      authTabSignUpBtn.classList.add('active');
+      authTabSignInBtn.classList.remove('active');
+      if (authNameFieldGroup) authNameFieldGroup.classList.remove('hidden');
+      if (authSubmitActionBtn) authSubmitActionBtn.innerHTML = '<span>Sign Up — Get 100 Free Credits</span>';
+    } else {
+      authTabSignInBtn.classList.add('active');
+      authTabSignUpBtn.classList.remove('active');
+      if (authNameFieldGroup) authNameFieldGroup.classList.add('hidden');
+      if (authSubmitActionBtn) authSubmitActionBtn.innerHTML = '<span>Sign In</span>';
+    }
+  }
+}
+
+async function handleAuthSubmit(e) {
+  if (e) e.preventDefault();
+  const email = authEmailInput ? authEmailInput.value.trim() : '';
+  const password = authPasswordInput ? authPasswordInput.value : '';
+  const name = authNameInput ? authNameInput.value.trim() : '';
+
+  if (!email || !password) {
+    showAuthError('Please fill in both email and password.');
+    return;
+  }
+
+  const endpoint = currentAuthMode === 'signup' ? '/api/auth/signup' : '/api/auth/login';
+  const body = currentAuthMode === 'signup' ? { email, password, name } : { email, password };
+
+  try {
+    const res = await fetch(`${API_BASE}${endpoint}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      showAuthError(data.detail || 'Authentication failed. Please try again.');
+      return;
+    }
+
+    authToken = data.token;
+    localStorage.setItem('shaktiman_token', authToken);
+    localStorage.setItem('shaktiman_user', JSON.stringify(data.user));
+    updateAuthUI(data.user);
+    closeAuthModal();
+    showToast(`Welcome, ${data.user.name || data.user.email}! (⚡ ${data.user.credits} credits ready)`);
+  } catch (err) {
+    showAuthError('Cannot connect to authentication server. Is the backend running?');
+  }
+}
+
+function showAuthError(msg) {
+  if (authErrorBanner) {
+    authErrorBanner.textContent = msg;
+    authErrorBanner.classList.remove('hidden');
+  }
+}
+
+async function handleOAuth(provider) {
+  const defaultEmail = authEmailInput && authEmailInput.value.trim() ? authEmailInput.value.trim() : `user.${provider}@shaktiman.ai`;
+  const email = window.prompt(`Sign in with ${provider.charAt(0).toUpperCase() + provider.slice(1)} account:`, defaultEmail);
+  if (!email) return;
+
+  const name = email.split('@')[0].replace(/[._]/g, ' ');
+  const avatar = `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(email)}`;
+
+  try {
+    const res = await fetch(`${API_BASE}/api/auth/oauth`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        provider: provider,
+        email: email,
+        name: name,
+        avatar_url: avatar
+      })
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      showAuthError(data.detail || 'OAuth sign-in failed.');
+      return;
+    }
+
+    authToken = data.token;
+    localStorage.setItem('shaktiman_token', authToken);
+    localStorage.setItem('shaktiman_user', JSON.stringify(data.user));
+    updateAuthUI(data.user);
+    closeAuthModal();
+    showToast(`Signed in with ${provider.charAt(0).toUpperCase() + provider.slice(1)}! (⚡ ${data.user.credits} credits)`);
+  } catch (err) {
+    showAuthError('OAuth authentication request failed: ' + err.message);
+  }
+}
+
+function handleSignOut() {
+  authToken = '';
+  currentUser = null;
+  localStorage.removeItem('shaktiman_token');
+  localStorage.removeItem('shaktiman_user');
+  updateAuthUI(null);
+  showToast('Signed out of Shaktiman Browser.');
+}
+
+function toggleSupabaseAccordion() {
+  if (supabaseAccordionContent) {
+    const isHidden = supabaseAccordionContent.classList.contains('hidden');
+    if (isHidden) {
+      supabaseAccordionContent.classList.remove('hidden');
+      if (accordionArrow) accordionArrow.innerHTML = '&#9652;';
+    } else {
+      supabaseAccordionContent.classList.add('hidden');
+      if (accordionArrow) accordionArrow.innerHTML = '&#9662;';
+    }
+  }
+}
+
+function saveSupabaseConfig() {
+  const url = supabaseUrlInput ? supabaseUrlInput.value.trim() : '';
+  const key = supabaseKeyInput ? supabaseKeyInput.value.trim() : '';
+  localStorage.setItem('supabase_url', url);
+  localStorage.setItem('supabase_key', key);
+  showToast('Supabase configuration saved.');
+}
+
+function initAuth() {
+  if (signInHeaderBtn) {
+    signInHeaderBtn.addEventListener('click', () => openAuthModal('signin'));
+  }
+  if (signOutHeaderBtn) {
+    signOutHeaderBtn.addEventListener('click', handleSignOut);
+  }
+  if (closeAuthModalBtn) {
+    closeAuthModalBtn.addEventListener('click', closeAuthModal);
+  }
+  if (authTabSignInBtn) {
+    authTabSignInBtn.addEventListener('click', () => setAuthMode('signin'));
+  }
+  if (authTabSignUpBtn) {
+    authTabSignUpBtn.addEventListener('click', () => setAuthMode('signup'));
+  }
+  if (oauthGoogleBtn) {
+    oauthGoogleBtn.addEventListener('click', () => handleOAuth('google'));
+  }
+  if (oauthGithubBtn) {
+    oauthGithubBtn.addEventListener('click', () => handleOAuth('github'));
+  }
+  if (oauthAppleBtn) {
+    oauthAppleBtn.addEventListener('click', () => handleOAuth('apple'));
+  }
+  if (oauthMicrosoftBtn) {
+    oauthMicrosoftBtn.addEventListener('click', () => handleOAuth('microsoft'));
+  }
+  if (authEmailForm) {
+    authEmailForm.addEventListener('submit', handleAuthSubmit);
+  }
+  if (supabaseAccordionToggle) {
+    supabaseAccordionToggle.addEventListener('click', toggleSupabaseAccordion);
+  }
+  if (saveSupabaseSettingsBtn) {
+    saveSupabaseSettingsBtn.addEventListener('click', saveSupabaseConfig);
+  }
+  if (supabaseUrlInput) {
+    supabaseUrlInput.value = localStorage.getItem('supabase_url') || '';
+  }
+  if (supabaseKeyInput) {
+    supabaseKeyInput.value = localStorage.getItem('supabase_key') || '';
+  }
+  if (authModalOverlay) {
+    authModalOverlay.addEventListener('click', (e) => {
+      if (e.target === authModalOverlay) closeAuthModal();
+    });
+  }
+}
+
+async function checkAndDeductCredit() {
+  if (!authToken || !currentUser) {
+    showToast('Please sign in to access Shaktiman AI');
+    openAuthModal('signin');
+    return false;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/api/credits/consume`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authToken}`
+      }
+    });
+
+    if (res.status === 402) {
+      currentCredits = 0;
+      updateCreditUI(0);
+      if (currentUser) currentUser.credits = 0;
+      openPaywallModal();
+      return false;
+    }
+
+    if (res.status === 401) {
+      handleSignOut();
+      showToast('Session expired. Please sign in again.');
+      openAuthModal('signin');
+      return false;
+    }
+
+    if (res.ok) {
+      const data = await res.json();
+      currentCredits = data.remaining_credits;
+      if (currentUser) currentUser.credits = currentCredits;
       updateCreditUI(currentCredits);
       return true;
     }
-  } catch (err) {}
+  } catch (err) {
+    if (api.consumeCredit) {
+      const localRes = await api.consumeCredit();
+      if (localRes.success) {
+        currentCredits = localRes.balance;
+        updateCreditUI(currentCredits);
+        return true;
+      }
+    }
+  }
+
   openPaywallModal();
   return false;
 }
@@ -145,6 +474,17 @@ async function checkAndDeductCredit() {
 function openPaywallModal() {
   if (paywallModal) {
     paywallModal.classList.add('active');
+    if (paywallUserEmailBadge) {
+      const email = currentUser ? currentUser.email : '0';
+      paywallUserEmailBadge.textContent = `${email.toUpperCase()} — 0 / 100 CREDITS REMAINING`;
+    }
+    if (paywallAccountText) {
+      if (currentUser) {
+        paywallAccountText.textContent = `Account (${currentUser.email}) has reached 0 credits. Recharge now to continue autonomous web searches and AI assistance.`;
+      } else {
+        paywallAccountText.textContent = `Your Shaktiman AI credit balance is 0. Sign in or top up to continue enjoying autonomous searches and AI features.`;
+      }
+    }
     if (passCodeInput) {
       passCodeInput.value = '';
       setTimeout(() => passCodeInput.focus(), 150);
@@ -162,8 +502,12 @@ function closePaywallModal() {
   }
 }
 
+function openPaymentLink() {
+  window.open('https://ankit-portfolio-ten-tawny.vercel.app/', '_blank');
+}
+
 function handleBuyCredits() {
-  window.open('https://your-payment-link.com/topup', '_blank');
+  openPaymentLink();
 }
 
 async function handleRedeemPass() {
@@ -175,11 +519,56 @@ async function handleRedeemPass() {
       paywallCard.classList.add('shake');
     }
     if (passFeedbackMsg) {
-      passFeedbackMsg.textContent = 'Please enter a valid activation voucher or pass code.';
+      passFeedbackMsg.textContent = 'Please enter a valid activation voucher or transaction ID.';
       passFeedbackMsg.className = 'pass-feedback-msg error';
     }
     return;
   }
+
+  if (!authToken || !currentUser) {
+    showToast('Please sign in first to redeem credits to your account');
+    openAuthModal('signin');
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/api/credits/topup`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authToken}`
+      },
+      body: JSON.stringify({ code: code, transaction_id: code })
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      currentCredits = data.credits;
+      if (currentUser) currentUser.credits = currentCredits;
+      updateCreditUI(currentCredits);
+      if (passFeedbackMsg) {
+        passFeedbackMsg.textContent = '⚡ ' + data.message;
+        passFeedbackMsg.className = 'pass-feedback-msg success';
+      }
+      setTimeout(() => {
+        closePaywallModal();
+        showToast('⚡ ' + data.message);
+      }, 500);
+      return;
+    } else {
+      const errData = await res.json().catch(() => ({ detail: 'Verification failed' }));
+      if (paywallCard) {
+        paywallCard.classList.remove('shake');
+        void paywallCard.offsetWidth;
+        paywallCard.classList.add('shake');
+      }
+      if (passFeedbackMsg) {
+        passFeedbackMsg.textContent = '💥 ' + (errData.detail || 'Invalid voucher or transaction ID');
+        passFeedbackMsg.className = 'pass-feedback-msg error';
+      }
+      return;
+    }
+  } catch (err) {}
 
   if (api.redeemCode) {
     const res = await api.redeemCode(code);
@@ -646,6 +1035,10 @@ newTabBtn.addEventListener('click', () => {
 aiToggleBtn.addEventListener('click', toggleSidebar);
 
 function toggleSidebar() {
+  if (!currentUser) {
+    openAuthModal('signin');
+    return;
+  }
   aiSidebar.classList.toggle('open');
 }
 
@@ -1253,6 +1646,8 @@ window.addEventListener('keydown', (e) => {
 });
 
 initSecurityAndCredits();
+initAuth();
+checkAuthStatus();
 initTheme();
 renderFavorites();
 createTab();
