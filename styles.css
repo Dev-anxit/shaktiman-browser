@@ -640,49 +640,75 @@ html, body {
 
 .tiles-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 16px;
   width: 100%;
-  max-width: 680px;
+  max-width: 620px;
+  margin: 0 auto;
 }
 
-.tile {
+@media (max-width: 680px) {
+  .tiles-grid {
+    grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+    gap: 12px;
+  }
+}
+
+.tile-card {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 8px;
-  padding: 14px 8px;
-  border-radius: 14px;
+  padding: 12px 6px;
+  border-radius: 16px;
   background: var(--card-bg);
   border: 1px solid var(--glass-border);
   cursor: pointer;
-  transition: all 0.2s var(--spring);
+  transition: all 0.25s var(--spring);
   text-align: center;
   box-shadow: var(--shadow-card);
 }
 
-.tile:hover {
-  transform: translateY(-3px);
+.tile-card:hover {
+  transform: translateY(-4px) scale(1.02);
   border-color: var(--accent);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35), 0 0 15px var(--accent-glow);
 }
 
-.tile-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
+.tile-glyph {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.2rem;
-  font-weight: 700;
   background: var(--glass-pill);
-  color: var(--text-primary);
+  border: 1px solid var(--glass-border);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.08);
+  transition: transform 0.25s var(--spring);
+  overflow: hidden;
+}
+
+.tile-card:hover .tile-glyph {
+  transform: scale(1.08);
+}
+
+.tile-brand-img {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  border-radius: 8px;
 }
 
 .tile-title {
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: 0.76rem;
+  font-weight: 700;
   color: var(--text-primary);
+  max-width: 86px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .ai-sidebar {
