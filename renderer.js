@@ -5,12 +5,6 @@ let currentCredits = 10;
 let tabs = [];
 let activeTabId = null;
 let tabIdCounter = 1;
-let isFetchingWallpaper = false;
-let currentWallpaper = {
-  url: '',
-  badge: 'Mixed Chaos',
-  title: 'Funny Animals & Memes'
-};
 
 const FAVORITES = [
   { title: 'Local Search', url: 'http://localhost:8000/', glyph: '&#10022;' },
@@ -51,9 +45,7 @@ const shieldResetBtn = document.getElementById('shieldResetBtn');
 const fireBtn = document.getElementById('fireBtn');
 const aiToggleBtn = document.getElementById('aiToggleBtn');
 const aiSidebar = document.getElementById('aiSidebar');
-const themeMenuBtn = document.getElementById('themeMenuBtn');
-const themeMenu = document.getElementById('themeMenu');
-const activeThemeLabel = document.getElementById('activeThemeLabel');
+const themeToggleBtn = document.getElementById('themeToggleBtn');
 const viewContainer = document.getElementById('viewContainer');
 const startPage = document.getElementById('startPage');
 const startSearchForm = document.getElementById('startSearchForm');
@@ -63,14 +55,6 @@ const sidebarChat = document.getElementById('sidebarChat');
 const sidebarInput = document.getElementById('sidebarInput');
 const toast = document.getElementById('toast');
 const burnOverlay = document.getElementById('burnOverlay');
-
-const wallpaperCaptionPill = document.getElementById('wallpaperCaptionPill');
-const captionToggleBtn = document.getElementById('captionToggleBtn');
-const captionBadge = document.getElementById('captionBadge');
-const captionTitle = document.getElementById('captionTitle');
-const downloadWpBtn = document.getElementById('downloadWpBtn');
-const captionShuffleBtn = document.getElementById('captionShuffleBtn');
-const floatingShuffleBtn = document.getElementById('floatingShuffleBtn');
 
 const aiCreditLabel = document.getElementById('aiCreditLabel');
 const creditCountBadge = document.getElementById('creditCountBadge');
@@ -233,226 +217,48 @@ if (passCodeInput) {
   });
 }
 
-function setWallpaperMode(mode) {
-  localStorage.setItem('shaktiman_wallpaper_mode', mode);
-  themeMenu.classList.remove('open');
-  const labels = {
-    mixed: 'Mixed Chaos',
-    cats: 'Funny Cats',
-    dogs: 'Funny Dogs',
-    memes: 'Programmer Memes',
-    aurora: 'Aurora Gradient',
-    custom: 'Custom Image'
-  };
-  activeThemeLabel.textContent = labels[mode] || 'Mixed Chaos';
-  fetchNextWallpaper();
+function initTheme() {
+  const saved = localStorage.getItem('shaktiman_theme') || 'dark';
+  applyTheme(saved);
 }
 
-function openCustomWpDialog() {
-  themeMenu.classList.remove('open');
-  const customUrl = prompt('Enter image URL for custom wallpaper:', 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe');
-  if (customUrl && customUrl.trim()) {
-    localStorage.setItem('shaktiman_custom_wallpaper_url', customUrl.trim());
-    setWallpaperMode('custom');
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  localStorage.setItem('shaktiman_theme', theme);
+  const bgFixedLayer = document.getElementById('bg-fixed-layer');
+  if (bgFixedLayer) {
+    bgFixedLayer.style.backgroundImage = 'none';
   }
+  syncThemeToWebviews(theme);
 }
 
-function initWallpaperMode() {
-  const saved = localStorage.getItem('shaktiman_wallpaper_mode') || 'mixed';
-  const labels = {
-    mixed: 'Mixed Chaos',
-    cats: 'Funny Cats',
-    dogs: 'Funny Dogs',
-    memes: 'Programmer Memes',
-    aurora: 'Aurora Gradient',
-    custom: 'Custom Image'
-  };
-  activeThemeLabel.textContent = labels[saved] || 'Mixed Chaos';
-
-  if (wallpaperCaptionPill && captionToggleBtn) {
-    captionToggleBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      wallpaperCaptionPill.classList.toggle('collapsed');
-      captionToggleBtn.innerHTML = wallpaperCaptionPill.classList.contains('collapsed') ? '&#9654;' : '&#9664;';
-    });
-  }
-
-  if (captionShuffleBtn) {
-    captionShuffleBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      fetchNextWallpaper();
-    });
-  }
-
-  if (floatingShuffleBtn) {
-    floatingShuffleBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      fetchNextWallpaper();
-    });
-  }
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme') || 'dark';
+  const target = current === 'dark' ? 'light' : 'dark';
+  applyTheme(target);
 }
 
-async function fetchNextWallpaper() {
-  if (isFetchingWallpaper) return;
-  isFetchingWallpaper = true;
-
-  if (captionShuffleBtn) captionShuffleBtn.classList.add('loading');
-  if (floatingShuffleBtn) floatingShuffleBtn.classList.add('loading');
-
-  const mode = localStorage.getItem('shaktiman_wallpaper_mode') || 'mixed';
-
-  try {
-    if (mode === 'aurora') {
-      applyAuroraTheme();
-      return;
+function syncThemeToWebviews(theme) {
+  tabs.forEach(tab => {
+    const wv = document.getElementById(`wv-${tab.id}`);
+    if (wv) {
+      try {
+        wv.executeJavaScript(`
+          document.documentElement.setAttribute('data-theme', '${theme}');
+          try { localStorage.setItem('shaktiman_theme', '${theme}'); } catch(e){}
+        `).catch(() => {});
+      } catch (e) {}
     }
-    if (mode === 'custom') {
-      const customUrl = localStorage.getItem('shaktiman_custom_wallpaper_url') || '';
-      if (customUrl) {
-        await loadAndApplyImage(customUrl, '🖼️ Custom Image', 'Personal Wallpaper');
-        return;
-      }
-    }
-    if (mode === 'cats') {
-      await fetchCatWallpaper();
-    } else if (mode === 'dogs') {
-      await fetchDogWallpaper();
-    } else if (mode === 'memes') {
-      await fetchMemeWallpaper();
-    } else {
-      const pool = ['cats', 'dogs', 'memes'];
-      const chosen = pool[Math.floor(Math.random() * pool.length)];
-      if (chosen === 'cats') await fetchCatWallpaper();
-      else if (chosen === 'dogs') await fetchDogWallpaper();
-      else await fetchMemeWallpaper();
-    }
-  } catch (err) {
-    applyFallbackWallpaper();
-  } finally {
-    isFetchingWallpaper = false;
-    if (captionShuffleBtn) captionShuffleBtn.classList.remove('loading');
-    if (floatingShuffleBtn) floatingShuffleBtn.classList.remove('loading');
-  }
-}
-
-async function fetchCatWallpaper() {
-  let imgUrl = '';
-  let title = 'Funny Cat Moment';
-  try {
-    const res = await fetch('https://cataas.com/cat?json=true');
-    if (res.ok) {
-      const data = await res.json();
-      if (data.url && (data.url.startsWith('http://') || data.url.startsWith('https://'))) {
-        imgUrl = data.url;
-      } else if (data.url && data.url.startsWith('/')) {
-        imgUrl = 'https://cataas.com' + data.url;
-      } else if (data.id || data._id) {
-        imgUrl = 'https://cataas.com/cat/' + (data.id || data._id);
-      }
-      if (data.tags && data.tags.length > 0) {
-        title = 'Funny Cat: ' + data.tags.slice(0, 3).join(', ');
-      }
-    }
-  } catch (e) {}
-
-  if (!imgUrl) {
-    imgUrl = 'https://cataas.com/cat/funny?t=' + Date.now();
-  }
-
-  await loadAndApplyImage(imgUrl, '🐱 Funny Cat', title);
-}
-
-async function fetchDogWallpaper() {
-  const res = await fetch('https://dog.ceo/api/breeds/image/random');
-  const data = await res.json();
-  if (data && data.message) {
-    const parts = data.message.split('/');
-    const breedIdx = parts.indexOf('breeds');
-    let breedName = 'Good Doggo';
-    if (breedIdx !== -1 && parts[breedIdx + 1]) {
-      breedName = parts[breedIdx + 1].replace('-', ' ').replace(/\b\w/g, c => c.toUpperCase());
-    }
-    await loadAndApplyImage(data.message, '🐶 Funny Dog', 'Hilarious ' + breedName);
-  } else {
-    throw new Error('Dog API failed');
-  }
-}
-
-async function fetchMemeWallpaper() {
-  const subreddits = ['ProgrammerHumor', 'wholesomememes'];
-  const chosenSub = subreddits[Math.floor(Math.random() * subreddits.length)];
-  const res = await fetch('https://meme-api.com/gimme/' + chosenSub);
-  const data = await res.json();
-  if (data && data.url && !data.nsfw) {
-    const badge = chosenSub === 'ProgrammerHumor' ? '💻 Programmer Meme' : '✨ Wholesome Meme';
-    await loadAndApplyImage(data.url, badge, data.title || 'Meme from r/' + chosenSub);
-  } else {
-    await fetchCatWallpaper();
-  }
-}
-
-function loadAndApplyImage(url, badge, title) {
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.onload = () => {
-      renderWallpaper(url, badge, title);
-      resolve();
-    };
-    img.onerror = () => {
-      applyFallbackWallpaper();
-      resolve();
-    };
-    img.src = url;
   });
 }
 
-function renderWallpaper(url, badge, title) {
-  const bgFixedLayer = document.getElementById('bg-fixed-layer');
-  const bgVignetteOverlay = document.getElementById('bgVignetteOverlay');
-  const orbs = document.querySelectorAll('.aurora-orb');
-
-  orbs.forEach(orb => orb.style.display = 'none');
-  if (bgVignetteOverlay) bgVignetteOverlay.style.display = 'block';
-
-  bgFixedLayer.style.backgroundImage = `url("${url}")`;
-  bgFixedLayer.style.backgroundSize = 'cover';
-  bgFixedLayer.style.backgroundPosition = 'center';
-
-  currentWallpaper = { url, badge, title };
-
-  if (captionBadge) captionBadge.textContent = badge;
-  if (captionTitle) captionTitle.textContent = title;
-  if (downloadWpBtn) downloadWpBtn.href = url;
+if (themeToggleBtn) {
+  themeToggleBtn.addEventListener('click', () => {
+    toggleTheme();
+  });
 }
-
-function applyAuroraTheme() {
-  const bgFixedLayer = document.getElementById('bg-fixed-layer');
-  const bgVignetteOverlay = document.getElementById('bgVignetteOverlay');
-  const orbs = document.querySelectorAll('.aurora-orb');
-
-  bgFixedLayer.style.backgroundImage = 'none';
-  if (bgVignetteOverlay) bgVignetteOverlay.style.display = 'none';
-  orbs.forEach(orb => orb.style.display = 'block');
-
-  if (captionBadge) captionBadge.textContent = '✨ Aurora Gradient';
-  if (captionTitle) captionTitle.textContent = 'Multi-color Mesh Waves';
-  if (downloadWpBtn) downloadWpBtn.href = '#';
-}
-
-function applyFallbackWallpaper() {
-  const fallbackUrl = 'https://images.dog.ceo/breeds/shiba/shiba-13.jpg';
-  renderWallpaper(fallbackUrl, '🐶 Cute Shiba', 'Much Wow, Very Shaktiman');
-}
-
-themeMenuBtn.addEventListener('click', (e) => {
-  e.stopPropagation();
-  themeMenu.classList.toggle('open');
-});
 
 document.addEventListener('click', (e) => {
-  if (!themeMenu.contains(e.target) && e.target !== themeMenuBtn) {
-    themeMenu.classList.remove('open');
-  }
   if (shieldPopover && !shieldPopover.contains(e.target) && !shieldBtn.contains(e.target)) {
     shieldPopover.classList.remove('active');
   }
@@ -483,7 +289,8 @@ function parseInputUrl(input) {
     return 'https://' + trimmed;
   }
 
-  return 'http://localhost:8000/?q=' + encodeURIComponent(trimmed);
+  const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+  return 'http://localhost:8000/?q=' + encodeURIComponent(trimmed) + '&theme=' + currentTheme;
 }
 
 function updateOmniboxIcon(url) {
@@ -547,8 +354,6 @@ function createTab(initialUrl = null) {
 
   if (initialUrl) {
     webview.src = initialUrl;
-  } else {
-    fetchNextWallpaper();
   }
 
   switchTab(tabId);
@@ -561,6 +366,13 @@ function setupWebviewEvents(tab, webview) {
     try {
       tab.webContentsId = webview.getWebContentsId();
     } catch (err) {}
+    const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+    try {
+      webview.executeJavaScript(`
+        document.documentElement.setAttribute('data-theme', '${currentTheme}');
+        try { localStorage.setItem('shaktiman_theme', '${currentTheme}'); } catch(e){}
+      `).catch(() => {});
+    } catch (e) {}
   });
 
   webview.addEventListener('did-start-loading', () => {
@@ -1437,13 +1249,10 @@ window.addEventListener('keydown', (e) => {
   } else if (isCmdOrCtrl && e.key.toLowerCase() === 'b') {
     e.preventDefault();
     toggleSidebar();
-  } else if (!isCmdOrCtrl && !isInputFocused && e.key.toLowerCase() === 's') {
-    e.preventDefault();
-    fetchNextWallpaper();
   }
 });
 
 initSecurityAndCredits();
-initWallpaperMode();
+initTheme();
 renderFavorites();
 createTab();

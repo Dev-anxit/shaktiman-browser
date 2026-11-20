@@ -250,7 +250,7 @@ class ChatRequest(BaseModel):
     page_text: str = ""
 
 HTML_PAGE = """<!DOCTYPE html>
-<html lang="en" data-theme="aurora">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -262,86 +262,52 @@ HTML_PAGE = """<!DOCTYPE html>
       margin: 0;
       padding: 0;
     }
-    :root, [data-theme="aurora"] {
-      --bg-layer: radial-gradient(at 0% 0%, #4338ca 0px, transparent 50%),
-                  radial-gradient(at 100% 0%, #7e22ce 0px, transparent 50%),
-                  radial-gradient(at 100% 100%, #0e7490 0px, transparent 50%),
-                  radial-gradient(at 0% 100%, #be185d 0px, transparent 50%), rgb(7, 11, 20);
-      --glass-bg: rgba(15, 23, 42, 0.65);
-      --glass-border: rgba(255, 255, 255, 0.16);
-      --glass-pill: rgba(30, 41, 59, 0.7);
-      --text-primary: #f8fafc;
-      --text-muted: #94a3b8;
-      --accent: #38bdf8;
-      --accent-glow: rgba(56, 189, 248, 0.35);
+    :root, [data-theme="dark"] {
+      --bg-layer: #09090b;
+      --bg-color: #09090b;
+      --card-bg: #121215;
+      --glass-bg: #121215;
+      --glass-border: #27272a;
+      --glass-pill: #18181b;
+      --input-bg: #18181b;
+      --text-primary: #fafafa;
+      --text-muted: #a1a1aa;
+      --accent: #3b82f6;
+      --accent-glow: rgba(59, 130, 246, 0.25);
+      --link: #60a5fa;
       --mark-bg: #fbbf24;
+      --mark-text: #09090b;
+      --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.5);
+      --spring: cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    [data-theme="light"] {
+      --bg-layer: #ffffff;
+      --bg-color: #ffffff;
+      --card-bg: #ffffff;
+      --glass-bg: #ffffff;
+      --glass-border: #e2e8f0;
+      --glass-pill: #f1f5f9;
+      --input-bg: #f8fafc;
+      --text-primary: #0f172a;
+      --text-muted: #475569;
+      --accent: #2563eb;
+      --accent-glow: rgba(37, 99, 235, 0.2);
+      --link: #1a0dab;
+      --mark-bg: #fef08a;
       --mark-text: #0f172a;
-      --spring: cubic-bezier(0.22, 1, 0.36, 1);
-    }
-    [data-theme="cyber"] {
-      --bg-layer: #05070f;
-      --glass-bg: rgba(10, 15, 30, 0.75);
-      --glass-border: rgba(14, 165, 233, 0.25);
-      --glass-pill: rgba(15, 23, 42, 0.85);
-      --text-primary: #f0fdf4;
-      --text-muted: #64748b;
-      --accent: #22c55e;
-      --accent-glow: rgba(34, 197, 94, 0.35);
-      --mark-bg: #22c55e;
-      --mark-text: #022c22;
-      --spring: cubic-bezier(0.22, 1, 0.36, 1);
-    }
-    [data-theme="sunset"] {
-      --bg-layer: radial-gradient(at 15% 15%, #b45309 0px, transparent 50%),
-                  radial-gradient(at 85% 20%, #be123c 0px, transparent 55%),
-                  radial-gradient(at 50% 85%, #6d28d9 0px, transparent 60%), rgb(19, 7, 34);
-      --glass-bg: rgba(36, 15, 48, 0.65);
-      --glass-border: rgba(244, 63, 94, 0.22);
-      --glass-pill: rgba(48, 20, 64, 0.75);
-      --text-primary: #fff1f2;
-      --text-muted: #cbd5e1;
-      --accent: #fb7185;
-      --accent-glow: rgba(251, 113, 133, 0.4);
-      --mark-bg: #f43f5e;
-      --mark-text: #ffffff;
-      --spring: cubic-bezier(0.22, 1, 0.36, 1);
-    }
-    [data-theme="strawberry"] {
-      --bg-layer: radial-gradient(at 10% 20%, #fecdd3 0px, transparent 55%),
-                  radial-gradient(at 90% 10%, #fed7aa 0px, transparent 50%),
-                  radial-gradient(at 50% 90%, #fbcfe8 0px, transparent 60%),
-                  radial-gradient(at 80% 80%, #ddd6fe 0px, transparent 50%), rgb(255, 241, 242);
-      --glass-bg: rgba(255, 255, 255, 0.75);
-      --glass-border: rgba(244, 63, 94, 0.25);
-      --glass-pill: rgba(255, 241, 242, 0.85);
-      --text-primary: #881337;
-      --text-muted: #9f1239;
-      --accent: #e11d48;
-      --accent-glow: rgba(225, 29, 72, 0.25);
-      --mark-bg: #f43f5e;
-      --mark-text: #ffffff;
-      --spring: cubic-bezier(0.22, 1, 0.36, 1);
-    }
-    [data-theme="custom"] {
-      --bg-layer: #090d16;
-      --glass-bg: rgba(15, 23, 42, 0.7);
-      --glass-border: rgba(255, 255, 255, 0.2);
-      --glass-pill: rgba(30, 41, 59, 0.8);
-      --text-primary: #f8fafc;
-      --text-muted: #94a3b8;
-      --accent: #38bdf8;
-      --accent-glow: rgba(56, 189, 248, 0.35);
-      --mark-bg: #fbbf24;
-      --mark-text: #0f172a;
+      --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06), 0 4px 12px rgba(0, 0, 0, 0.04);
       --spring: cubic-bezier(0.22, 1, 0.36, 1);
     }
     html, body {
       min-height: 100vh;
       width: 100%;
-      background: transparent !important;
+      background: var(--bg-layer);
       color: var(--text-primary);
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
       overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
     }
     div#bg-fixed-layer {
       position: fixed;
@@ -349,56 +315,9 @@ HTML_PAGE = """<!DOCTYPE html>
       width: 100vw;
       height: 100vh;
       background: var(--bg-layer);
-      background-size: cover;
-      background-position: center;
-      transition: background 0.6s ease;
       z-index: -1;
       pointer-events: none;
-    }
-    .orb {
-      position: absolute;
-      border-radius: 50%;
-      filter: blur(80px);
-      opacity: 0.6;
-      animation: drift 18s ease-in-out infinite alternate;
-      pointer-events: none;
-    }
-    .orb-1 {
-      width: 450px;
-      height: 450px;
-      background: #6366f1;
-      top: 5%;
-      left: 10%;
-    }
-    .orb-2 {
-      width: 500px;
-      height: 500px;
-      background: #ec4899;
-      top: 40%;
-      right: 10%;
-      animation-duration: 22s;
-    }
-    .orb-3 {
-      width: 380px;
-      height: 380px;
-      background: #06b6d4;
-      bottom: 5%;
-      left: 30%;
-      animation-duration: 26s;
-    }
-    @keyframes drift {
-      0% { transform: translate(0, 0) scale(1); }
-      50% { transform: translate(60px, -40px) scale(1.1); }
-      100% { transform: translate(-50px, 50px) scale(0.95); }
-    }
-    canvas#particle-canvas {
-      position: fixed;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: -1;
-      display: none;
+      transition: background 0.2s ease;
     }
     .theme-pill-bar {
       position: fixed;
@@ -410,33 +329,42 @@ HTML_PAGE = """<!DOCTYPE html>
       gap: 6px;
       padding: 6px 10px;
       background: var(--glass-pill);
-      backdrop-filter: blur(24px);
-      -webkit-backdrop-filter: blur(24px);
       border: 1px solid var(--glass-border);
       border-radius: 30px;
-      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+      box-shadow: var(--shadow-card);
     }
-    .theme-btn {
-      padding: 5px 12px;
-      font-size: 0.75rem;
-      font-weight: 700;
-      border: none;
-      border-radius: 20px;
+    .theme-toggle-btn {
+      width: 30px;
+      height: 30px;
+      border-radius: 15px;
+      border: 1px solid var(--glass-border);
       background: transparent;
-      color: var(--text-muted);
-      cursor: pointer;
-      transition: all 0.25s var(--spring);
-    }
-    .theme-btn:hover {
       color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s var(--spring);
     }
-    .theme-btn.active {
-      background: var(--accent);
-      color: #ffffff;
-      box-shadow: 0 2px 10px var(--accent-glow);
+    .theme-toggle-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      transform: scale(1.05);
+    }
+    [data-theme="dark"] .sun-icon {
+      display: block;
+    }
+    [data-theme="dark"] .moon-icon {
+      display: none;
+    }
+    [data-theme="light"] .sun-icon {
+      display: none;
+    }
+    [data-theme="light"] .moon-icon {
+      display: block;
     }
     .top-action-btn {
-      padding: 5px 10px;
+      padding: 5px 12px;
       font-size: 0.75rem;
       font-weight: 700;
       border: 1px solid var(--glass-border);
@@ -470,19 +398,17 @@ HTML_PAGE = """<!DOCTYPE html>
       display: flex;
       flex-direction: column;
       align-items: center;
-      transition: all 0.5s var(--spring);
+      transition: all 0.4s var(--spring);
     }
     .search-hero-container.compact {
       padding: 16px 20px;
       position: sticky;
       top: 0;
       z-index: 40;
-      background: var(--glass-bg);
-      backdrop-filter: blur(28px);
-      -webkit-backdrop-filter: blur(28px);
+      background: var(--card-bg);
       border-bottom: 1px solid var(--glass-border);
       max-width: 100%;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+      box-shadow: var(--shadow-card);
     }
     .hero-badge-row {
       display: flex;
@@ -499,50 +425,36 @@ HTML_PAGE = """<!DOCTYPE html>
       height: 58px;
       border-radius: 50%;
       border: 2px solid rgba(251, 191, 36, 0.7);
-      box-shadow: 0 0 24px rgba(245, 158, 11, 0.5), 0 0 48px rgba(239, 68, 68, 0.3);
+      box-shadow: 0 0 20px rgba(245, 158, 11, 0.4);
       object-fit: cover;
-      transition: transform 0.35s var(--spring), box-shadow 0.35s ease;
+      transition: transform 0.35s var(--spring);
     }
     .brand-logo-img:hover {
-      transform: scale(1.1) rotate(5deg);
-      box-shadow: 0 0 35px rgba(245, 158, 11, 0.75), 0 0 65px rgba(239, 68, 68, 0.45);
-    }
-    .brand-logo-icon {
-      width: 48px;
-      height: 48px;
-      border-radius: 14px;
-      background: linear-gradient(135deg, var(--accent), #a855f7);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 24px;
-      color: #ffffff;
-      box-shadow: 0 8px 24px var(--accent-glow);
+      transform: scale(1.08) rotate(4deg);
     }
     .brand-title {
       font-size: 2.25rem;
       font-weight: 800;
       letter-spacing: -0.04em;
+      color: var(--text-primary);
     }
     .search-pill-form {
       width: 100%;
       max-width: 720px;
       position: relative;
-      background: var(--glass-pill);
-      backdrop-filter: blur(24px);
-      -webkit-backdrop-filter: blur(24px);
+      background: var(--card-bg);
       border: 1px solid var(--glass-border);
       border-radius: 20px;
       padding: 6px 8px 6px 18px;
       display: flex;
       align-items: center;
       gap: 12px;
-      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.2);
-      transition: all 0.3s var(--spring);
+      box-shadow: var(--shadow-card);
+      transition: all 0.25s var(--spring);
     }
     .search-pill-form:focus-within {
       border-color: var(--accent);
-      box-shadow: 0 0 0 4px var(--accent-glow), 0 16px 45px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 0 0 3px var(--accent-glow), var(--shadow-card);
       transform: translateY(-2px);
     }
     .search-input {
@@ -571,7 +483,7 @@ HTML_PAGE = """<!DOCTYPE html>
       transition: all 0.2s var(--spring);
     }
     .search-btn:hover {
-      filter: brightness(1.15);
+      filter: brightness(1.1);
       transform: scale(1.02);
     }
     .search-filter-pills {
@@ -608,17 +520,15 @@ HTML_PAGE = """<!DOCTYPE html>
       background: transparent !important;
     }
     .ai-overview-card {
-      background: var(--glass-bg);
-      backdrop-filter: blur(24px);
-      -webkit-backdrop-filter: blur(24px);
+      background: var(--card-bg);
       border: 1px solid var(--glass-border);
       border-radius: 18px;
       padding: 20px;
       display: none;
       flex-direction: column;
       gap: 10px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-      animation: fadeUp 0.4s var(--spring);
+      box-shadow: var(--shadow-card);
+      animation: fadeUp 0.3s var(--spring);
     }
     .ai-overview-header {
       display: flex;
@@ -634,21 +544,19 @@ HTML_PAGE = """<!DOCTYPE html>
       color: var(--text-primary);
     }
     .result-card {
-      background: var(--glass-bg);
-      backdrop-filter: blur(24px);
-      -webkit-backdrop-filter: blur(24px);
+      background: var(--card-bg);
       border: 1px solid var(--glass-border);
       border-radius: 16px;
       padding: 20px;
-      transition: all 0.25s var(--spring);
-      animation: fadeUp 0.4s var(--spring) forwards;
+      transition: all 0.2s var(--spring);
+      animation: fadeUp 0.3s var(--spring) forwards;
       opacity: 0;
       transform: translateY(14px);
+      box-shadow: var(--shadow-card);
     }
     .result-card:hover {
       border-color: var(--accent);
       transform: translateY(-2px);
-      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.2);
     }
     @keyframes fadeUp {
       to { opacity: 1; transform: translateY(0); }
@@ -683,12 +591,12 @@ HTML_PAGE = """<!DOCTYPE html>
       line-height: 1.35;
     }
     .card-title a {
-      color: var(--text-primary);
+      color: var(--link);
       text-decoration: none;
       transition: color 0.15s ease;
     }
     .card-title a:hover {
-      color: var(--accent);
+      text-decoration: underline;
     }
     .card-snippet {
       font-size: 0.92rem;
@@ -703,8 +611,7 @@ HTML_PAGE = """<!DOCTYPE html>
       border-radius: 4px;
     }
     .empty-card {
-      background: var(--glass-bg);
-      backdrop-filter: blur(24px);
+      background: var(--card-bg);
       border: 1px solid var(--glass-border);
       border-radius: 20px;
       padding: 40px 24px;
@@ -713,22 +620,22 @@ HTML_PAGE = """<!DOCTYPE html>
       flex-direction: column;
       align-items: center;
       gap: 14px;
+      box-shadow: var(--shadow-card);
     }
     .seed-btn {
       padding: 10px 20px;
       border-radius: 12px;
       border: none;
-      background: linear-gradient(135deg, var(--accent), #a855f7);
+      background: var(--accent);
       color: #ffffff;
       font-weight: 700;
       font-size: 0.95rem;
       cursor: pointer;
-      box-shadow: 0 4px 18px var(--accent-glow);
+      box-shadow: 0 4px 16px var(--accent-glow);
       transition: all 0.2s var(--spring);
     }
     .seed-btn:hover {
-      transform: scale(1.04);
-      filter: brightness(1.15);
+      filter: brightness(1.1);
     }
     .ai-drawer {
       position: fixed;
@@ -737,16 +644,14 @@ HTML_PAGE = """<!DOCTYPE html>
       bottom: 0;
       width: 440px;
       max-width: 90vw;
-      background: var(--glass-bg);
-      backdrop-filter: blur(32px);
-      -webkit-backdrop-filter: blur(32px);
+      background: var(--card-bg);
       border-left: 1px solid var(--glass-border);
       z-index: 200;
       display: flex;
       flex-direction: column;
       transform: translateX(100%);
-      transition: transform 0.4s var(--spring);
-      box-shadow: -15px 0 45px rgba(0, 0, 0, 0.4);
+      transition: transform 0.35s var(--spring);
+      box-shadow: var(--shadow-card);
     }
     .ai-drawer.open {
       transform: translateX(0);
@@ -793,58 +698,28 @@ HTML_PAGE = """<!DOCTYPE html>
       font-weight: 700;
       cursor: pointer;
     }
-    .modal-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.65);
-      backdrop-filter: blur(8px);
-      z-index: 300;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-    .modal-overlay.open {
-      display: flex;
-    }
-    .modal-card {
-      background: var(--glass-bg);
-      backdrop-filter: blur(28px);
-      border: 1px solid var(--glass-border);
-      border-radius: 20px;
-      width: 100%;
-      max-width: 520px;
-      padding: 24px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-    .modal-input {
-      width: 100%;
-      padding: 10px 14px;
-      border-radius: 10px;
-      border: 1px solid var(--glass-border);
-      background: var(--glass-pill);
-      color: var(--text-primary);
-      outline: none;
-      font-size: 0.9rem;
-    }
   </style>
 </head>
 <body>
-  <div id="bg-fixed-layer">
-    <div class="orb orb-1"></div>
-    <div class="orb orb-2"></div>
-    <div class="orb orb-3"></div>
-  </div>
-  <canvas id="particle-canvas"></canvas>
+  <div id="bg-fixed-layer"></div>
 
   <div class="theme-pill-bar">
-    <button class="theme-btn active" data-theme="aurora" onclick="setTheme('aurora')">Aurora</button>
-    <button class="theme-btn" data-theme="cyber" onclick="setTheme('cyber')">Cyber</button>
-    <button class="theme-btn" data-theme="sunset" onclick="setTheme('sunset')">Sunset</button>
-    <button class="theme-btn" data-theme="strawberry" onclick="setTheme('strawberry')">Strawberry</button>
-    <button class="theme-btn" data-theme="custom" onclick="openCustomWpModal()">Custom</button>
+    <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Toggle Light/Dark Theme">
+      <svg class="sun-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="5"></circle>
+        <line x1="12" y1="1" x2="12" y2="3"></line>
+        <line x1="12" y1="21" x2="12" y2="23"></line>
+        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+        <line x1="1" y1="12" x2="3" y2="12"></line>
+        <line x1="21" y1="12" x2="23" y2="12"></line>
+        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+      </svg>
+      <svg class="moon-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+      </svg>
+    </button>
     <button class="top-action-btn" onclick="toggleAiDrawer()">&#10022; AI</button>
     <button class="top-action-btn" onclick="seedSampleData()">+ Seed</button>
   </div>
@@ -903,155 +778,27 @@ HTML_PAGE = """<!DOCTYPE html>
     </div>
   </aside>
 
-  <div class="modal-overlay" id="customWpModal">
-    <div class="modal-card">
-      <div style="display:flex; justify-content:space-between; align-items:center;">
-        <span style="font-weight:700;">Custom Live Backdrop</span>
-        <button style="background:none; border:none; color:var(--text-primary); font-size:1.2rem; cursor:pointer;" onclick="closeCustomWpModal()">&times;</button>
-      </div>
-      <input type="url" class="modal-input" id="customUrlInput" placeholder="Enter image URL (Unsplash, direct link)...">
-      <div style="display:flex; gap:10px; align-items:center;">
-        <span style="font-size:0.85rem; color:var(--text-muted);">Or pick local image:</span>
-        <input type="file" id="customFileInput" accept="image/png,image/jpeg,image/webp" style="font-size:0.85rem;">
-      </div>
-      <button class="seed-btn" onclick="applyCustomWallpaper()" style="align-self:flex-end;">Apply Wallpaper</button>
-    </div>
-  </div>
-
   <script>
     let currentFilter = 'all';
-    let particleActive = false;
+
+    function initTheme() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const queryTheme = urlParams.get('theme');
+      const savedTheme = localStorage.getItem('shaktiman_theme');
+      const theme = queryTheme || savedTheme || 'dark';
+      setTheme(theme);
+    }
 
     function setTheme(theme) {
       document.documentElement.setAttribute('data-theme', theme);
-      localStorage.setItem('shaktiman_theme', theme);
-
-      document.querySelectorAll('.theme-btn').forEach(btn => {
-        if (btn.getAttribute('data-theme') === theme) {
-          btn.classList.add('active');
-        } else {
-          btn.classList.remove('active');
-        }
-      });
-
-      const particleCanvas = document.getElementById('particle-canvas');
-      const fixedLayer = document.getElementById('bg-fixed-layer');
-
-      if (theme === 'cyber') {
-        particleCanvas.style.display = 'block';
-        particleActive = true;
-        initParticles();
-      } else {
-        particleCanvas.style.display = 'none';
-        particleActive = false;
-      }
-
-      if (theme !== 'custom') {
-        fixedLayer.style.backgroundImage = '';
-      }
+      try { localStorage.setItem('shaktiman_theme', theme); } catch (e) {}
     }
 
-    function initTheme() {
-      const saved = localStorage.getItem('shaktiman_theme') || 'aurora';
-      setTheme(saved);
-      const customWp = localStorage.getItem('shaktiman_custom_wp');
-      if (saved === 'custom' && customWp) {
-        document.getElementById('bg-fixed-layer').style.backgroundImage = `url('${customWp}')`;
-      }
+    function toggleTheme() {
+      const current = document.documentElement.getAttribute('data-theme') || 'dark';
+      const target = current === 'dark' ? 'light' : 'dark';
+      setTheme(target);
     }
-
-    function openCustomWpModal() {
-      document.getElementById('customWpModal').classList.add('open');
-    }
-
-    function closeCustomWpModal() {
-      document.getElementById('customWpModal').classList.remove('open');
-    }
-
-    function applyCustomWallpaper() {
-      const urlInput = document.getElementById('customUrlInput').value.trim();
-      const fileInput = document.getElementById('customFileInput');
-
-      if (fileInput.files && fileInput.files[0]) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          const dataUrl = e.target.result;
-          document.getElementById('bg-fixed-layer').style.backgroundImage = `url('${dataUrl}')`;
-          localStorage.setItem('shaktiman_custom_wp', dataUrl);
-          setTheme('custom');
-          closeCustomWpModal();
-        };
-        reader.readAsDataURL(fileInput.files[0]);
-        return;
-      }
-
-      if (urlInput) {
-        document.getElementById('bg-fixed-layer').style.backgroundImage = `url('${urlInput}')`;
-        localStorage.setItem('shaktiman_custom_wp', urlInput);
-        setTheme('custom');
-        closeCustomWpModal();
-      }
-    }
-
-    let pCanvas, pCtx, pWidth, pHeight;
-    let particles = [];
-
-    function initParticles() {
-      pCanvas = document.getElementById('particle-canvas');
-      pCtx = pCanvas.getContext('2d');
-      pWidth = pCanvas.width = window.innerWidth;
-      pHeight = pCanvas.height = window.innerHeight;
-
-      particles = [];
-      for (let i = 0; i < 50; i++) {
-        particles.push({
-          x: Math.random() * pWidth,
-          y: Math.random() * pHeight,
-          vx: (Math.random() - 0.5) * 0.9,
-          vy: (Math.random() - 0.5) * 0.9,
-          r: Math.random() * 2 + 1.5
-        });
-      }
-      renderParticles();
-    }
-
-    function renderParticles() {
-      if (!particleActive) return;
-      pCtx.clearRect(0, 0, pWidth, pHeight);
-      pCtx.fillStyle = 'rgba(34, 197, 94, 0.6)';
-      pCtx.strokeStyle = 'rgba(34, 197, 94, 0.12)';
-
-      for (let i = 0; i < particles.length; i++) {
-        const p = particles[i];
-        p.x += p.vx;
-        p.y += p.vy;
-        if (p.x < 0 || p.x > pWidth) p.vx *= -1;
-        if (p.y < 0 || p.y > pHeight) p.vy *= -1;
-
-        pCtx.beginPath();
-        pCtx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        pCtx.fill();
-
-        for (let j = i + 1; j < particles.length; j++) {
-          const p2 = particles[j];
-          const dist = Math.hypot(p.x - p2.x, p.y - p2.y);
-          if (dist < 120) {
-            pCtx.beginPath();
-            pCtx.moveTo(p.x, p.y);
-            pCtx.lineTo(p2.x, p2.y);
-            pCtx.stroke();
-          }
-        }
-      }
-      requestAnimationFrame(renderParticles);
-    }
-
-    window.addEventListener('resize', () => {
-      if (particleActive && pCanvas) {
-        pWidth = pCanvas.width = window.innerWidth;
-        pHeight = pCanvas.height = window.innerHeight;
-      }
-    });
 
     const searchForm = document.getElementById('searchForm');
     const searchInput = document.getElementById('searchInput');
@@ -1086,7 +833,8 @@ HTML_PAGE = """<!DOCTYPE html>
         return;
       }
 
-      window.history.pushState({}, "", "/?q=" + encodeURIComponent(q));
+      const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+      window.history.pushState({}, "", "/?q=" + encodeURIComponent(q) + "&theme=" + currentTheme);
       document.title = `${q} - Shaktiman Search`;
       heroContainer.classList.add('compact');
 
